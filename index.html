@@ -1,454 +1,889 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Лондонская система: 12 уроков</title>
-    
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Лондонская система: 12 уроков</title>
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #09090b;
-            color: #e4e4e7;
-            overscroll-behavior-y: none;
-            -webkit-tap-highlight-color: transparent; /* Убирает системное выделение при тапе на мобилке */
-        }
+  <style>
+    :root {
+      --bg: #090d16;
+      --card-bg: rgba(22, 30, 46, 0.7);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --accent: #10b981;
+      --accent-glow: rgba(16, 185, 129, 0.25);
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+    }
 
-        #board {
-            width: 100%;
-            max-width: 450px;
-            margin: 0 auto;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
-            touch-action: manipulation; /* Разрешаем только клики, запрещаем зум */
-        }
-        
-        .board-b72b1 { border: none !important; }
-        
-        /* Стилизация выделенной клетки (тап) */
-        .highlight-square {
-            background-color: rgba(130, 151, 105, 0.7) !important;
-            box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.5) !important;
-        }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
 
-        /* Анимация дрожания при ошибке */
-        .error-shake {
-            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
-        }
+    body {
+      background: radial-gradient(circle at 50% 0%, #172554 0%, var(--bg) 70%);
+      color: var(--text);
+      font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      touch-action: manipulation;
+    }
 
-        @keyframes shake {
-            10%, 90% { transform: translate3d(-2px, 0, 0); }
-            20%, 80% { transform: translate3d(4px, 0, 0); }
-            30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
-            40%, 60% { transform: translate3d(6px, 0, 0); }
-        }
-        
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: #18181b; }
-        ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 4px; }
-        
-        .panel-transition { transition: all 0.3s ease; }
-    </style>
+    /* Screen Management */
+    .screen {
+      display: none;
+      width: 100%;
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 20px 16px 40px;
+    }
+
+    .screen.active {
+      display: flex;
+      flex-direction: column;
+      animation: fadeIn 0.25s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* HOME SCREEN */
+    .hero {
+      margin-bottom: 24px;
+      text-align: center;
+    }
+
+    .hero-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: var(--accent);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      border-radius: 999px;
+      margin-bottom: 12px;
+    }
+
+    .hero h1 {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+
+    .hero p {
+      color: var(--text-muted);
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    /* Overall Progress Bar */
+    .overall-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      padding: 16px 20px;
+      margin-bottom: 24px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+    }
+
+    .overall-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 10px;
+    }
+
+    .overall-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .overall-percent {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .progress-track {
+      height: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #10b981, #34d399);
+      width: 0%;
+      transition: width 0.4s ease;
+    }
+
+    /* Lessons Grid */
+    .lessons-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .lesson-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 16px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+    }
+
+    .lesson-card:active {
+      transform: scale(0.98);
+      background: rgba(30, 41, 59, 0.9);
+    }
+
+    .lesson-card.completed {
+      border-color: rgba(16, 185, 129, 0.4);
+    }
+
+    .lesson-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .lesson-num {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .lesson-name {
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff;
+      margin-top: 2px;
+    }
+
+    .badge-status {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 8px;
+      white-space: nowrap;
+    }
+
+    .badge-status.done {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--accent);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .badge-status.new {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text-muted);
+    }
+
+    .lesson-intel {
+      font-size: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .intel-streak {
+      color: var(--warning);
+      font-weight: 600;
+    }
+
+    .intel-mistakes {
+      color: var(--text-muted);
+    }
+
+    /* GAME SCREEN */
+    .game-top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .back-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--card-border);
+      color: #fff;
+      padding: 8px 14px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .lesson-indicator {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+
+    /* Chessboard styling */
+    .board-box {
+      width: 100%;
+      aspect-ratio: 1;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+      border: 2px solid rgba(255, 255, 255, 0.08);
+      margin-bottom: 14px;
+      position: relative;
+    }
+
+    #board {
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    /* Lichess style tap highlight */
+    .highlight-selected {
+      box-shadow: inset 0 0 0 4px #eab308 !important;
+      background-color: rgba(234, 179, 8, 0.25) !important;
+    }
+
+    .highlight-dest::after {
+      content: '';
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      background: rgba(16, 185, 129, 0.7);
+      border-radius: 50%;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+
+    /* Flight Debrief / Разбор полетов */
+    .debrief-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-height: 86px;
+      transition: all 0.2s ease;
+    }
+
+    .debrief-card.error {
+      border-color: var(--danger);
+      background: rgba(239, 68, 68, 0.12);
+    }
+
+    .debrief-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+
+    .debrief-text {
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 1.4;
+      color: #fff;
+    }
+
+    .debrief-hint {
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--warning);
+      font-weight: 700;
+      font-size: 15px;
+    }
+
+    /* Success / Finish Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(5, 8, 15, 0.85);
+      backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 100;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-box {
+      background: #1e293b;
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      padding: 24px;
+      width: 100%;
+      max-width: 360px;
+      text-align: center;
+    }
+
+    .modal-box h2 {
+      font-size: 22px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .modal-box p {
+      color: var(--text-muted);
+      font-size: 14px;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .modal-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .btn-main {
+      background: var(--accent);
+      color: #064e3b;
+      font-weight: 700;
+      padding: 12px;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      font-size: 15px;
+    }
+
+    .btn-sec {
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+      font-weight: 600;
+      padding: 12px;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+    }
+  </style>
 </head>
-<body class="h-screen w-full flex flex-col overflow-hidden">
+<body>
 
-    <header class="bg-zinc-900 border-b border-zinc-800 p-3 sm:p-4 flex flex-col sm:flex-row justify-between items-center gap-3 shrink-0 z-10">
-        <div class="flex items-center gap-3 w-full sm:w-auto justify-between">
+  <!-- SCREEN 1: WELCOME & DASHBOARD -->
+  <div id="homeScreen" class="screen active">
+    <div class="hero">
+      <div class="hero-badge">Интерактивный тренажер</div>
+      <h1>Лондонская система</h1>
+      <p>Освой фундаментальный дебют за 12 практических уроков без зубрежки вариантов</p>
+    </div>
+
+    <div class="overall-card">
+      <div class="overall-header">
+        <span class="overall-title">Общий прогресс курса</span>
+        <span id="overallPercent" class="overall-percent">0%</span>
+      </div>
+      <div class="progress-track">
+        <div id="overallBar" class="progress-fill"></div>
+      </div>
+    </div>
+
+    <div id="lessonsList" class="lessons-list">
+      <!-- Injected by JavaScript -->
+    </div>
+  </div>
+
+  <!-- SCREEN 2: GAME BOARD -->
+  <div id="gameScreen" class="screen">
+    <div class="game-top-bar">
+      <button id="backBtn" class="back-btn">← Меню</button>
+      <div id="gameLessonTitle" class="lesson-indicator">Урок 1 из 12</div>
+    </div>
+
+    <div class="board-box">
+      <div id="board"></div>
+    </div>
+
+    <div id="debriefCard" class="debrief-card">
+      <div class="debrief-title">Разбор полетов</div>
+      <div id="debriefText" class="debrief-text">Сделай первый ход. Играем Лондонскую систему белыми!</div>
+      <div id="debriefHint" class="debrief-hint"></div>
+    </div>
+  </div>
+
+  <!-- MODAL: VICTORY / LESSON COMPLETE -->
+  <div id="modalVictory" class="modal-overlay">
+    <div class="modal-box">
+      <h2>Отличная работа! 🎯</h2>
+      <p id="modalDesc">Урок успешно завершен. Теория закреплена в мышечной памяти.</p>
+      <div class="modal-actions">
+        <button id="modalNextBtn" class="btn-main">Следующий урок</button>
+        <button id="modalHomeBtn" class="btn-sec">Вернуться в меню</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"></script>
+
+  <script>
+    /* 12 уроков Лондонской системы */
+    const LESSONS = [
+      {
+        id: 1,
+        title: "Классический ответ 1...d5",
+        subtitle: "Симметричная структура и ранний Слон на f4",
+        moves: [
+          { w: 'd4', b: 'd5' },
+          { w: 'Bf4', b: 'Nf6' },
+          { w: 'e3', b: 'e6' },
+          { w: 'Nf3', b: 'Bd6' },
+          { w: 'Bg3', b: 'O-O' }
+        ]
+      },
+      {
+        id: 2,
+        title: "Староиндийский стиль 1...Nf6",
+        subtitle: "Ответ на фианкетто королевского фланга черных",
+        moves: [
+          { w: 'd4', b: 'Nf6' },
+          { w: 'Bf4', b: 'g6' },
+          { w: 'e3', b: 'Bg7' },
+          { w: 'Nf3', b: 'd6' },
+          { w: 'h3', b: 'O-O' }
+        ]
+      },
+      {
+        id: 3,
+        title: "Атака по центру через 2...c5",
+        subtitle: "Укрепление пешечной пирамиды c3-d4",
+        moves: [
+          { w: 'd4', b: 'd5' },
+          { w: 'Bf4', b: 'c5' },
+          { w: 'e3', b: 'Nc6' },
+          { w: 'c3', b: 'Nf6' },
+          { w: 'Nd2', b: 'e6' }
+        ]
+      },
+      {
+        id: 4,
+        title: "Выпад черного ферзя 3...Qb6",
+        subtitle: "Защита пешки b2 и контригра",
+        moves: [
+          { w: 'd4', b: 'd5' },
+          { w: 'Bf4', b: 'c5' },
+          { w: 'e3', b: 'Qb6' },
+          { w: 'Nc3', b: 'e6' },
+          { w: 'Nf3', b: 'a6' }
+        ]
+      },
+      {
+        id: 5,
+        title: "Новоиндийская схема 1...e6",
+        subtitle: "Контроль ключевого поля e5",
+        moves: [
+          { w: 'd4', b: 'e6' },
+          { w: 'Bf4', b: 'Nf6' },
+          { w: 'e3', b: 'b6' },
+          { w: 'Nf3', b: 'Bb7' },
+          { w: 'Nbd2', b: 'Be7' }
+        ]
+      },
+      {
+        id: 6,
+        title: "Размен белопольных слонов",
+        subtitle: "Отступление слона на g3 для сохранения линии h",
+        moves: [
+          { w: 'd4', b: 'd5' },
+          { w: 'Bf4', b: 'Bd6' },
+          { w: 'Bg3', b: 'Nf6' },
+          { w: 'e3', b: 'O-O' },
+          { w: 'Nf3', b: 'c5' }
+        ]
+      },
+      {
+        id: 7,
+        title: "Славянский треугольник",
+        subtitle: "Плотный позиционный зажим",
+        moves: [
+          { w: 'd4', b: 'd5' },
+          { w: 'Bf4', b: 'c6' },
+          { w: 'e3', b: 'Nf6' },
+          { w: 'Nf3', b: 'Bf5' },
+          { w: 'c4', b: 'e6' }
+        ]
+      },
+      {
+        id: 8,
+        title: "Агрессивный выпад ...Nh5",
+        subtitle: "Сохранение слона через поле g5 или h3",
+        moves: [
+          { w: 'd4', b: 'Nf6' },
+          { w: 'Bf4', b: 'd5' },
+          { w: 'e3', b: 'c5' },
+          { w: 'c3', b: 'Nc6' },
+          { w: 'Nd2', b: 'Nh5' },
+          { w: 'Bg5', b: 'h6' }
+        ]
+      },
+      {
+        id: 9,
+        title: "Структура Грюнфельда",
+        subtitle: "Быстрое развитие коня ферзевого фланга",
+        moves: [
+          { w: 'd4', b: 'Nf6' },
+          { w: 'Bf4', b: 'g6' },
+          { w: 'e3', b: 'Bg7' },
+          { w: 'Nf3', b: 'd5' },
+          { w: 'c3', b: 'O-O' }
+        ]
+      },
+      {
+        id: 10,
+        title: "План с конвекцией коня на e5",
+        subtitle: "Переход к штурму королевского фланга",
+        moves: [
+          { w: 'd4', b: 'd5' },
+          { w: 'Bf4', b: 'Nf6' },
+          { w: 'e3', b: 'e6' },
+          { w: 'Nf3', b: 'Be7' },
+          { w: 'Ne5', b: 'O-O' }
+        ]
+      },
+      {
+        id: 11,
+        title: "Голландская защита 1...f5",
+        subtitle: "Позиционное превосходство над ослабленной диагональю",
+        moves: [
+          { w: 'd4', b: 'f5' },
+          { w: 'Bf4', b: 'Nf6' },
+          { w: 'e3', b: 'e6' },
+          { w: 'Nf3', b: 'b6' },
+          { w: 'h3', b: 'Bb7' }
+        ]
+      },
+      {
+        id: 12,
+        title: "Полная лондонская гармония",
+        subtitle: "Формирование идеального атакующего центра",
+        moves: [
+          { w: 'd4', b: 'd5' },
+          { w: 'Bf4', b: 'Nf6' },
+          { w: 'e3', b: 'c5' },
+          { w: 'c3', b: 'e6' },
+          { w: 'Nd2', b: 'Nc6' },
+          { w: 'Ngf3', b: 'Bd6' },
+          { w: 'Bg3', b: 'O-O' }
+        ]
+      }
+    ];
+
+    /* Storage: сохраняем ошибки и прогресс */
+    let userStats = JSON.parse(localStorage.getItem('london_stats') || '{}');
+
+    function saveStats() {
+      localStorage.setItem('london_stats', JSON.stringify(userStats));
+      renderDashboard();
+    }
+
+    function getLessonStat(id) {
+      if (!userStats[id]) {
+        userStats[id] = { completed: false, mistakes: 0, bestMoveIndex: 0 };
+      }
+      return userStats[id];
+    }
+
+    /* Russian move converter */
+    function toRussianNotation(san) {
+      if (!san) return '';
+      let piece = 'Пешка';
+      let rest = san;
+
+      if (san.startsWith('N')) { piece = 'Конь'; rest = san.substring(1); }
+      else if (san.startsWith('B')) { piece = 'Слон'; rest = san.substring(1); }
+      else if (san.startsWith('R')) { piece = 'Ладья'; rest = san.substring(1); }
+      else if (san.startsWith('Q')) { piece = 'Ферзь'; rest = san.substring(1); }
+      else if (san.startsWith('K')) { piece = 'Король'; rest = san.substring(1); }
+      else if (san === 'O-O') return 'Короткая рокировка';
+      else if (san === 'O-O-O') return 'Длинная рокировка';
+
+      rest = rest.replace('x', ' берет ').replace('+', ' с шахом').replace('#', ' мат');
+      rest = rest.replace(/a/g, 'А').replace(/b/g, 'Б').replace(/c/g, 'Ц')
+                 .replace(/d/g, 'Д').replace(/e/g, 'Е').replace(/f/g, 'Ф')
+                 .replace(/g/g, 'Ж').replace(/h/g, 'Х');
+
+      return `${piece} на ${rest.trim()}`;
+    }
+
+    /* Game State */
+    let currentLesson = null;
+    let stepIndex = 0;
+    let game = null;
+    let board = null;
+    let selectedSquare = null;
+
+    /* Render Home Screen */
+    function renderDashboard() {
+      const listEl = document.getElementById('lessonsList');
+      listEl.innerHTML = '';
+
+      let completedCount = 0;
+
+      LESSONS.forEach(l => {
+        const stat = getLessonStat(l.id);
+        if (stat.completed) completedCount++;
+
+        const totalMoves = l.moves.length;
+        let hintHtml = '';
+
+        if (stat.completed) {
+          hintHtml = `<div class="badge-status done">Пройден ★</div>`;
+        } else if (stat.bestMoveIndex > 0) {
+          const remaining = totalMoves - stat.bestMoveIndex;
+          if (remaining === 1) {
+            hintHtml = `<div class="badge-status new" style="color:var(--warning)">Остался 1 рывок до победы!</div>`;
+          } else {
+            hintHtml = `<div class="badge-status new">Ход ${stat.bestMoveIndex} из ${totalMoves}</div>`;
+          }
+        } else {
+          hintHtml = `<div class="badge-status new">Не начат</div>`;
+        }
+
+        const card = document.createElement('div');
+        card.className = `lesson-card ${stat.completed ? 'completed' : ''}`;
+        card.innerHTML = `
+          <div class="lesson-top">
             <div>
-                <h1 class="font-bold text-lg text-white leading-tight">Лондонская система</h1>
-                <p class="text-xs text-yellow-500 font-medium">Интерактивный тренажер</p>
+              <div class="lesson-num">Урок ${l.id}</div>
+              <div class="lesson-name">${l.title}</div>
             </div>
-            <select id="lesson-select" class="bg-zinc-800 border border-zinc-700 text-white text-sm rounded-lg focus:ring-yellow-500 focus:border-yellow-500 block p-2 outline-none max-w-[200px] truncate">
-                <!-- Заполняется из JS -->
-            </select>
-        </div>
-    </header>
+            ${hintHtml}
+          </div>
+          <div class="lesson-intel">
+            <div class="intel-streak">${l.subtitle}</div>
+            <div class="intel-mistakes">Ошибок допущено: <b>${stat.mistakes}</b></div>
+          </div>
+        `;
 
-    <main class="flex-1 w-full max-w-6xl mx-auto flex flex-col lg:flex-row gap-0 lg:gap-6 overflow-hidden lg:p-4 relative">
-        
-        <!-- Доска -->
-        <div class="w-full lg:w-[450px] shrink-0 p-4 lg:p-0 flex flex-col justify-center">
-            <div class="flex justify-between items-end mb-2 px-1">
-                <div class="flex items-center gap-2 text-zinc-400">
-                    <i class="fas fa-robot text-lg"></i>
-                    <span class="font-medium text-sm" id="opponent-name">Черные (Теория)</span>
-                </div>
-            </div>
+        card.addEventListener('click', () => startLesson(l.id));
+        listEl.appendChild(card);
+      });
 
-            <div id="board" class="w-full"></div>
-            
-            <div class="flex justify-between items-center mt-2 px-1">
-                <div class="flex items-center gap-2">
-                    <i class="fas fa-user text-white text-lg"></i>
-                    <span class="font-medium text-sm text-white">Вы (Белые)</span>
-                </div>
-                <div class="text-xs font-semibold bg-zinc-800 px-2 py-1 rounded text-zinc-300" id="move-counter">
-                    Ход: 1
-                </div>
-            </div>
-        </div>
+      const percent = Math.round((completedCount / LESSONS.length) * 100);
+      document.getElementById('overallPercent').innerText = `${percent}%`;
+      document.getElementById('overallBar').style.width = `${percent}%`;
+    }
 
-        <!-- Анализ и История -->
-        <div class="flex-1 flex flex-col gap-4 p-4 lg:p-0 overflow-y-auto">
-            
-            <div id="analysis-panel" class="bg-zinc-900 border border-zinc-700 rounded-xl p-4 shadow-lg panel-transition flex flex-col gap-2">
-                <div class="flex items-center gap-2 mb-1">
-                    <i id="analysis-icon" class="fas fa-clipboard-list text-blue-400"></i>
-                    <h3 class="font-bold text-white text-sm uppercase tracking-wider">Разбор полетов</h3>
-                </div>
-                <p id="analysis-text" class="text-zinc-300 text-sm leading-relaxed">
-                    Нажмите на фигуру, а затем на нужную клетку. Играйте согласно теории.
-                </p>
-                <div class="w-full bg-zinc-800 rounded-full h-1.5 mt-2 overflow-hidden" id="progress-container">
-                    <div id="theory-progress" class="bg-blue-500 h-1.5 rounded-full transition-all duration-300" style="width: 0%"></div>
-                </div>
-            </div>
+    /* Start a Lesson */
+    function startLesson(id) {
+      currentLesson = LESSONS.find(l => l.id === id);
+      stepIndex = 0;
+      selectedSquare = null;
 
-            <div class="flex-1 bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden flex flex-col min-h-[150px]">
-                <div class="bg-zinc-800/50 p-2 text-xs font-bold text-zinc-400 uppercase tracking-wider border-b border-zinc-800 text-center">
-                    История партии
-                </div>
-                <div class="flex-1 overflow-y-auto p-2" id="move-history-container">
-                    <table class="w-full text-left border-collapse text-sm">
-                        <thead class="text-zinc-500 sticky top-0 bg-zinc-900/90 hidden">
-                            <tr>
-                                <th class="pb-1 w-12 text-center">#</th>
-                                <th class="pb-1 w-1/2 pl-2">Белые</th>
-                                <th class="pb-1 w-1/2 pl-2">Черные</th>
-                            </tr>
-                        </thead>
-                        <tbody id="move-history-body" class="text-zinc-300">
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </main>
+      document.getElementById('homeScreen').classList.remove('active');
+      document.getElementById('gameScreen').classList.add('active');
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"></script>
+      document.getElementById('gameLessonTitle').innerText = `Урок ${currentLesson.id} из 12`;
+      setDebrief('Ход белых. Сделай теоретический ход.', false);
 
-    <script>
-        const lessonsData = [
-            { id: 1, title: "Урок 1: Классический d5", desc: "Базовая расстановка. Построение треугольника c3-d4-e3.", moves: [{w: 'd4', b: 'd5'}, {w: 'Bf4', b: 'Nf6'}, {w: 'e3', b: 'e6'}, {w: 'Nf3', b: 'Bd6'}, {w: 'Bg3', b: 'O-O'}, {w: 'Nbd2', b: null}] },
-            { id: 2, title: "Урок 2: Славянское c5", desc: "Черные атакуют центр. Мы укрепляем пешкой c3.", moves: [{w: 'd4', b: 'd5'}, {w: 'Bf4', b: 'Nf6'}, {w: 'e3', b: 'c5'}, {w: 'c3', b: 'Nc6'}, {w: 'Nd2', b: 'e6'}, {w: 'Ngf3', b: null}] },
-            { id: 3, title: "Урок 3: Староиндийская", desc: "Против фианкетто на g7. Плотное развитие.", moves: [{w: 'd4', b: 'Nf6'}, {w: 'Bf4', b: 'g6'}, {w: 'e3', b: 'Bg7'}, {w: 'Nf3', b: 'O-O'}, {w: 'h3', b: 'd6'}, {w: 'Be2', b: null}] },
-            { id: 4, title: "Урок 4: Новоиндийская (b6)", desc: "Черные выводят слона на b7. Контролируем e4.", moves: [{w: 'd4', b: 'Nf6'}, {w: 'Bf4', b: 'e6'}, {w: 'e3', b: 'b6'}, {w: 'Nf3', b: 'Bb7'}, {w: 'Bd3', b: 'Be7'}, {w: 'h3', b: null}] },
-            { id: 5, title: "Урок 5: Защита Грюнфельда", desc: "Микс d5 и g6. Спокойно развиваемся.", moves: [{w: 'd4', b: 'Nf6'}, {w: 'Bf4', b: 'g6'}, {w: 'e3', b: 'Bg7'}, {w: 'Nf3', b: 'd5'}, {w: 'Be2', b: 'O-O'}, {w: 'O-O', b: null}] },
-            { id: 6, title: "Урок 6: Симметричный Bf5", desc: "Копирование вывода слона. Готовим размен.", moves: [{w: 'd4', b: 'd5'}, {w: 'Bf4', b: 'Bf5'}, {w: 'e3', b: 'e6'}, {w: 'Bd3', b: 'Bxd3'}, {w: 'Qxd3', b: 'c6'}, {w: 'Nf3', b: null}] },
-            { id: 7, title: "Урок 7: Ранний выпад Qb6", desc: "Атака на b2. Встречный выпад ферзем.", moves: [{w: 'd4', b: 'd5'}, {w: 'Bf4', b: 'Nf6'}, {w: 'e3', b: 'c5'}, {w: 'c3', b: 'Qb6'}, {w: 'Qb3', b: 'c4'}, {w: 'Qc2', b: null}] },
-            { id: 8, title: "Урок 8: Голландская f5", desc: "Лондон против агрессивного флангового удара.", moves: [{w: 'd4', b: 'f5'}, {w: 'Bf4', b: 'Nf6'}, {w: 'e3', b: 'e6'}, {w: 'Nf3', b: 'Be7'}, {w: 'h3', b: 'O-O'}, {w: 'Be2', b: null}] },
-            { id: 9, title: "Урок 9: Система Чигорина", desc: "Защита центра от ударов коня.", moves: [{w: 'd4', b: 'd5'}, {w: 'Bf4', b: 'Nc6'}, {w: 'e3', b: 'Nf6'}, {w: 'Nf3', b: 'Bg4'}, {w: 'Be2', b: 'e6'}, {w: 'Nbd2', b: null}] },
-            { id: 10, title: "Урок 10: Каро-Канн (c6)", desc: "Крепкая защита черных.", moves: [{w: 'd4', b: 'd5'}, {w: 'Bf4', b: 'c6'}, {w: 'e3', b: 'Nf6'}, {w: 'Nf3', b: 'Bf5'}, {w: 'Bd3', b: 'Bxd3'}, {w: 'cxd3', b: null}] },
-            { id: 11, title: "Урок 11: Бенони (c5)", desc: "Укрепление структуры.", moves: [{w: 'd4', b: 'c5'}, {w: 'c3', b: 'd5'}, {w: 'Bf4', b: 'Nf6'}, {w: 'e3', b: 'Nc6'}, {w: 'Nd2', b: 'e6'}, {w: 'Ngf3', b: null}] },
-            { id: 12, title: "Урок 12: Энглундовский e5", desc: "Ловушка черных. Забираем и защищаемся.", moves: [{w: 'd4', b: 'e5'}, {w: 'dxe5', b: 'Nc6'}, {w: 'Nf3', b: 'Qe7'}, {w: 'Bf4', b: 'Qb4+'}, {w: 'Bd2', b: 'Qxb2'}, {w: 'Nc3', b: null}] }
-        ];
+      initChessboard();
+    }
 
-        let board = null;
-        let game = new Chess();
-        let currentLessonIndex = 0;
-        let theoryIndex = 0;
-        let gameState = 'theory'; 
-        let moveHistoryCount = 0;
-        let resetTimeout = null;
-        
-        let selectedSquare = null;
+    function setDebrief(text, isError = false, hint = '') {
+      const card = document.getElementById('debriefCard');
+      const textEl = document.getElementById('debriefText');
+      const hintEl = document.getElementById('debriefHint');
 
-        const lessonSelect = document.getElementById('lesson-select');
-        const moveHistoryBody = document.getElementById('move-history-body');
-        const moveCounter = document.getElementById('move-counter');
-        const opponentName = document.getElementById('opponent-name');
-        
-        const analysisPanel = document.getElementById('analysis-panel');
-        const analysisIcon = document.getElementById('analysis-icon');
-        const analysisText = document.getElementById('analysis-text');
-        const theoryProgress = document.getElementById('theory-progress');
+      textEl.innerText = text;
+      hintEl.innerText = hint;
 
-        // Переводчик ходов для новичков (e.g. Nf3 -> Конь на Ф3)
-        function getRussianHint(sanMove) {
-            if (sanMove === 'O-O') return 'Короткая рокировка';
-            if (sanMove === 'O-O-O') return 'Длинная рокировка';
+      if (isError) {
+        card.classList.add('error');
+      } else {
+        card.classList.remove('error');
+      }
+    }
 
-            // Делаем тестовый ход, чтобы получить информацию о фигуре и клетке
-            const testGame = new Chess(game.fen());
-            const moveObj = testGame.move(sanMove);
-            
-            if (!moveObj) return sanMove; // На всякий случай
+    /* Chessboard tap-to-move implementation */
+    function initChessboard() {
+      game = new Chess();
 
-            const pieceNames = { 'p': 'Пешка', 'n': 'Конь', 'b': 'Слон', 'r': 'Ладья', 'q': 'Ферзь', 'k': 'Король' };
-            const fileNames = { 'a': 'А', 'b': 'Б', 'c': 'Ц', 'd': 'Д', 'e': 'Е', 'f': 'Ф', 'g': 'Ж', 'h': 'Аш' };
+      const pieceThemeUrl = 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png';
 
-            const pieceRu = pieceNames[moveObj.piece];
-            const fileRu = fileNames[moveObj.to[0]];
-            const rank = moveObj.to[1];
+      const config = {
+        position: 'start',
+        draggable: false, /* Отключаем drag для устранения следов на iOS */
+        pieceTheme: pieceThemeUrl,
+        moveSpeed: 150
+      };
 
-            return `${pieceRu} на ${fileRu}${rank}`;
-        }
+      board = Chessboard('board', config);
+      $(window).resize(board.resize);
 
-        function clearHighlight() {
-            $('#board .square-55d63').removeClass('highlight-square');
-        }
+      setupTapHandlers();
+    }
 
-        function highlightSquare(square) {
-            clearHighlight();
-            $(`#board .square-${square}`).addClass('highlight-square');
-        }
+    function setupTapHandlers() {
+      const boardEl = $('#board');
+      boardEl.off('click');
 
-        function updateAnalysisPanel(type, htmlContent) {
-            analysisText.innerHTML = htmlContent;
-            
-            analysisPanel.className = "bg-zinc-900 border rounded-xl p-4 shadow-lg panel-transition flex flex-col gap-2";
-            analysisIcon.className = "fas";
-            
-            if (type === 'error') {
-                analysisPanel.classList.add('border-red-500/50', 'bg-red-950/30');
-                analysisIcon.classList.add('fa-circle-xmark', 'text-red-500');
-            } else if (type === 'success') {
-                analysisPanel.classList.add('border-green-500/50', 'bg-green-950/30');
-                analysisIcon.classList.add('fa-check-circle', 'text-green-500');
-            } else {
-                analysisPanel.classList.add('border-zinc-700');
-                analysisIcon.classList.add('fa-clipboard-list', 'text-blue-400');
-            }
-        }
+      boardEl.on('click', '.square-55d63', function () {
+        const clickedSquare = $(this).attr('data-square');
+        handleSquareTap(clickedSquare);
+      });
+    }
 
-        function triggerTheoryError(playedMove, correctSan) {
-            gameState = 'error_delay';
-            $('#board').addClass('error-shake');
-            setTimeout(() => $('#board').removeClass('error-shake'), 400);
-            
-            const hint = getRussianHint(correctSan);
-            const errorMsg = `Неверный ход!<br>Подсказка: <b class="text-green-400 text-base">${hint}</b><br><span class="text-xs mt-2 block opacity-80 text-zinc-400">Перезапуск урока через 3 секунды...</span>`;
-            updateAnalysisPanel('error', errorMsg);
-            
-            resetTimeout = setTimeout(() => {
-                startLesson(currentLessonIndex);
-            }, 3500);
-        }
+    function removeHighlights() {
+      $('#board .square-55d63').removeClass('highlight-selected highlight-dest');
+    }
 
-        function attemptPlayerMove(source, target) {
-            let testMove = game.move({ from: source, to: target, promotion: 'q' });
-            
-            if (testMove === null) return; // Невозможный ход
+    function handleSquareTap(square) {
+      const piece = game.get(square);
 
-            if (gameState === 'theory') {
-                const lesson = lessonsData[currentLessonIndex];
-                const expectedMove = lesson.moves[theoryIndex].w;
-                
-                if (testMove.san === expectedMove) {
-                    // Верный ход
-                    board.position(game.fen());
-                    processCorrectTheoryMove(testMove, lesson);
-                } else {
-                    // Ошибка по теории
-                    game.undo(); 
-                    triggerTheoryError(testMove.san, expectedMove);
-                }
-            } 
-            else if (gameState === 'practice') {
-                board.position(game.fen());
-                renderMoveHistory(testMove, true);
-                if (!game.game_over()) {
-                    setTimeout(makeEngineMove, 300);
-                }
-            }
-        }
+      /* Если нажали на свою (белую) фигуру — выбираем её */
+      if (piece && piece.color === 'w') {
+        selectedSquare = square;
+        removeHighlights();
+        $(`#board .square-${square}`).addClass('highlight-selected');
 
-        function handleSquareClick(square) {
-            if (gameState === 'error_delay' || game.game_over()) return;
-            
-            const pieceObj = game.get(square);
-            
-            if (selectedSquare === null) {
-                // Выделяем свою фигуру
-                if (pieceObj && pieceObj.color === 'w') {
-                    selectedSquare = square;
-                    highlightSquare(square);
-                }
-            } else {
-                // Если клик на ту же клетку - отмена
-                if (selectedSquare === square) {
-                    clearHighlight();
-                    selectedSquare = null;
-                } 
-                // Смена фигуры
-                else if (pieceObj && pieceObj.color === 'w') {
-                    selectedSquare = square;
-                    highlightSquare(square);
-                } 
-                // Попытка хода
-                else {
-                    const src = selectedSquare;
-                    clearHighlight();
-                    selectedSquare = null;
-                    attemptPlayerMove(src, square);
-                }
-            }
-        }
-
-        function processCorrectTheoryMove(move, lesson) {
-            renderMoveHistory(move, true);
-            updateAnalysisPanel('success', 'Отлично! Правильный ход по теории.');
-            
-            const blackReply = lesson.moves[theoryIndex].b;
-            theoryIndex++;
-            updateProgress();
-            
-            if (blackReply === null) {
-                setTimeout(completeTheory, 400);
-            } else {
-                setTimeout(() => {
-                    if (gameState === 'error_delay') return;
-                    const bMove = game.move(blackReply);
-                    board.position(game.fen());
-                    renderMoveHistory(bMove, false);
-                    moveCounter.innerText = `Ход: ${theoryIndex + 1}`;
-                }, 400);
-            }
-        }
-
-        function completeTheory() {
-            gameState = 'practice';
-            updateAnalysisPanel('success', 'Теория пройдена! Режим практики. Компьютер перехватил управление за черных.');
-            
-            theoryProgress.style.width = '100%';
-            theoryProgress.className = "bg-green-500 h-1.5 rounded-full transition-all duration-300";
-            
-            opponentName.innerText = "Черные (ИИ Тренировка)";
-            opponentName.classList.remove('text-zinc-400');
-            opponentName.classList.add('text-green-400');
-            
-            if (game.turn() === 'b') {
-                setTimeout(makeEngineMove, 600);
-            }
-        }
-
-        function updateProgress() {
-            const lesson = lessonsData[currentLessonIndex];
-            const percent = (theoryIndex / lesson.moves.length) * 100;
-            theoryProgress.style.width = `${percent}%`;
-            theoryProgress.className = "bg-blue-500 h-1.5 rounded-full transition-all duration-300";
-        }
-
-        function renderMoveHistory(move, isWhite) {
-            if (isWhite) {
-                moveHistoryCount++;
-                const tr = document.createElement('tr');
-                tr.className = "border-b border-zinc-800/30 hover:bg-zinc-800/50 transition-colors";
-                tr.innerHTML = `
-                    <td class="py-1.5 text-center text-zinc-500">${moveHistoryCount}.</td>
-                    <td class="py-1.5 pl-2 text-white font-medium">${move.san}</td>
-                    <td class="py-1.5 pl-2 text-zinc-400" id="b-move-${moveHistoryCount}">...</td>
-                `;
-                moveHistoryBody.appendChild(tr);
-            } else {
-                const bTd = document.getElementById(`b-move-${moveHistoryCount}`);
-                if (bTd) {
-                    bTd.innerText = move.san;
-                    bTd.className = "py-1.5 pl-2 text-zinc-300 font-medium";
-                }
-            }
-            const container = document.getElementById('move-history-container');
-            container.scrollTop = container.scrollHeight;
-        }
-
-        function makeEngineMove() {
-            if (game.game_over()) return;
-            const moves = game.moves();
-            if (moves.length === 0) return;
-
-            let moveIndex = -1;
-            const captures = moves.filter(m => m.includes('x'));
-            
-            if (captures.length > 0) {
-                moveIndex = moves.indexOf(captures[Math.floor(Math.random() * captures.length)]);
-            } else {
-                moveIndex = Math.floor(Math.random() * moves.length);
-            }
-
-            const bMove = game.move(moves[moveIndex]);
-            board.position(game.fen());
-            renderMoveHistory(bMove, false);
-            moveCounter.innerText = `Ход: ${moveHistoryCount + 1}`;
-            
-            if (game.game_over()) {
-                let endMsg = "Игра окончена!";
-                if(game.in_checkmate()) endMsg = "Мат!";
-                else if(game.in_draw()) endMsg = "Ничья!";
-                updateAnalysisPanel('info', endMsg);
-            }
-        }
-
-        function startLesson(index) {
-            clearTimeout(resetTimeout);
-            currentLessonIndex = index;
-            const lesson = lessonsData[index];
-            
-            game.reset();
-            board.position(game.fen());
-            
-            theoryIndex = 0;
-            gameState = 'theory';
-            moveHistoryCount = 0;
-            moveHistoryBody.innerHTML = '';
-            
-            clearHighlight();
-            selectedSquare = null;
-            
-            updateAnalysisPanel('info', `<b>${lesson.title}</b><br>${lesson.desc} Сделайте первый ход.`);
-            updateProgress();
-            
-            opponentName.innerText = "Черные (Теория)";
-            opponentName.classList.remove('text-green-400');
-            opponentName.classList.add('text-zinc-400');
-            moveCounter.innerText = "Ход: 1";
-        }
-
-        $(document).ready(function() {
-            lessonsData.forEach((lesson, index) => {
-                const opt = document.createElement('option');
-                opt.value = index;
-                opt.text = lesson.title;
-                lessonSelect.appendChild(opt);
-            });
-            
-            lessonSelect.addEventListener('change', (e) => {
-                startLesson(parseInt(e.target.value));
-            });
-
-            // КРИТИЧЕСКИЕ НАСТРОЙКИ ДОСКИ:
-            // 1. draggable: false (полностью убивает баги со свайпами на айфоне)
-            // 2. moveSpeed: 150 (быстрые резкие анимации без тормозов)
-            const config = {
-                draggable: false, 
-                moveSpeed: 150, 
-                position: 'start',
-                pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
-            };
-            
-            board = Chessboard('board', config);
-            
-            $(window).resize(() => { if(board) board.resize(); });
-
-            // Обработка тапов (Click-to-move)
-            $('#board').on('click', '.square-55d63', function(e) {
-                e.preventDefault(); // Защита от двойных кликов/зума
-                const square = $(this).attr('data-square');
-                handleSquareClick(square);
-            });
-
-            startLesson(0);
+        /* Подсвечиваем легальные поля (Lichess style) */
+        const moves = game.moves({ square: square, verbose: true });
+        moves.forEach(m => {
+          $(`#board .square-${m.to}`).addClass('highlight-dest');
         });
-    </script>
+        return;
+      }
+
+      /* Если фигура уже выбрана и нажимаем на целевое поле */
+      if (selectedSquare) {
+        attemptMove(selectedSquare, square);
+        selectedSquare = null;
+        removeHighlights();
+      }
+    }
+
+    function attemptMove(from, to) {
+      const expectedMoveSan = currentLesson.moves[stepIndex].w;
+
+      /* Проверяем ход по правилам шахмат */
+      const move = game.move({ from: from, to: to, promotion: 'q' });
+
+      if (!move) return; /* Нелегальный ход */
+
+      /* Проверяем соответствие теории */
+      if (move.san === expectedMoveSan) {
+        board.position(game.fen());
+        setDebrief('Верно! Робот отвечает...', false);
+
+        /* Фиксируем лучший результат урока */
+        const stat = getLessonStat(currentLesson.id);
+        if (stepIndex + 1 > stat.bestMoveIndex) {
+          stat.bestMoveIndex = stepIndex + 1;
+          saveStats();
+        }
+
+        /* Ответ черных по книге */
+        setTimeout(() => {
+          const blackSan = currentLesson.moves[stepIndex].b;
+          game.move(blackSan);
+          board.position(game.fen());
+
+          stepIndex++;
+
+          if (stepIndex >= currentLesson.moves.length) {
+            stat.completed = true;
+            saveStats();
+            showVictoryModal();
+          } else {
+            setDebrief('Твой ход! Продолжай структуру.', false);
+          }
+        }, 350);
+
+      } else {
+        /* Ошибка: разбор полетов и сброс */
+        const stat = getLessonStat(currentLesson.id);
+        stat.mistakes++;
+        saveStats();
+
+        const correctRussian = toRussianNotation(expectedMoveSan);
+        setDebrief(
+          `Неверный ход (${toRussianNotation(move.san)}). Партия сброшена!`,
+          true,
+          `Правильно: ${correctRussian}`
+        );
+
+        /* Сбрасываем доску в начало урока */
+        setTimeout(() => {
+          game.reset();
+          board.start(false);
+          stepIndex = 0;
+        }, 1200);
+      }
+    }
+
+    function showVictoryModal() {
+      const modal = document.getElementById('modalVictory');
+      document.getElementById('modalDesc').innerText = `Урок ${currentLesson.id} «${currentLesson.title}» пройден без ошибок в финале!`;
+      modal.classList.add('active');
+    }
+
+    /* Навигация */
+    document.getElementById('backBtn').addEventListener('click', () => {
+      document.getElementById('gameScreen').classList.remove('active');
+      document.getElementById('homeScreen').classList.add('active');
+      renderDashboard();
+    });
+
+    document.getElementById('modalHomeBtn').addEventListener('click', () => {
+      document.getElementById('modalVictory').classList.remove('active');
+      document.getElementById('gameScreen').classList.remove('active');
+      document.getElementById('homeScreen').classList.add('active');
+      renderDashboard();
+    });
+
+    document.getElementById('modalNextBtn').addEventListener('click', () => {
+      document.getElementById('modalVictory').classList.remove('active');
+      const nextId = currentLesson.id + 1;
+      if (nextId <= LESSONS.length) {
+        startLesson(nextId);
+      } else {
+        document.getElementById('gameScreen').classList.remove('active');
+        document.getElementById('homeScreen').classList.add('active');
+        renderDashboard();
+      }
+    });
+
+    /* Старт */
+    renderDashboard();
+  </script>
 </body>
 </html>
