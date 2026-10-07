@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Лондонская система: 12 уроков</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- jQuery (required by chessboard.js) -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    
+    <!-- Chessboard.js CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.css">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #09090b; /* Zinc 950 */
+            color: #e4e4e7;
+            overscroll-behavior-y: none;
+            -webkit-tap-highlight-color: transparent; /* Remove default tap highlight on mobile */
+        }
+
+        #board {
+            width: 100%;
+            max-width: 450px;
+            margin: 0 auto;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+            touch-action: none; /* Crucial for preventing scroll during drag */
+        }
+        
+        .board-b72b1 { border: none !important; }
+        
+        /* Lichess style highlighting */
+        .highlight-square {
+            background-color: rgba(130, 151, 105, 0.7) !important;
+            box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.3) !important;
+        }
+
+        .error-shake {
+            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-3px, 0, 0); }
+            40%, 60% { transform: translate3d(3px, 0, 0); }
+        }
+        
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: #18181b; }
+        ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 4px; }
+        
+        .panel-transition { transition: all 0.3s ease; }
+    </style>
+</head>
+<body class="h-screen w-full flex flex-col overflow-hidden">
+
+    <header class="bg-zinc-900 border-b border-zinc-800 p-3 sm:p-4 flex flex-col sm:flex-row justify-between items-center gap-3 shrink-0 z-10">
+        <div class="flex items-center gap-3 w-full sm:w-auto justify-between">
+            <div>
+                <h1 class="font-bold text-lg text-white leading-tight">Лондонская система</h1>
+                <p class="text-xs text-yellow-500 font-medium">Интерактивный тренажер</p>
+            </div>
+            <select id="lesson-select" class="bg-zinc-800 border border-zinc-700 text-white text-sm rounded-lg focus:ring-yellow-500 focus:border-yellow-500 block p-2 outline-none">
+                <!-- Options populated by JS -->
+            </select>
+        </div>
+    </header>
+
+    <main class="flex-1 w-full max-w-6xl mx-auto flex flex-col lg:flex-row gap-0 lg:gap-6 overflow-hidden lg:p-4 relative">
+        
+        <!-- Left: Chessboard -->
+        <div class="w-full lg:w-[450px] shrink-0 p-4 lg:p-0 flex flex-col justify-center">
+            <div class="flex justify-between items-end mb-2 px-1">
+                <div class="flex items-center gap-2 text-zinc-400">
+                    <i class="fas fa-robot text-lg"></i>
+                    <span class="font-medium text-sm" id="opponent-name">Черные (Теория)</span>
+                </div>
+            </div>
+
+            <div id="board" class="w-full"></div>
+            
+            <div class="flex justify-between items-center mt-2 px-1">
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-user text-white text-lg"></i>
+                    <span class="font-medium text-sm text-white">Вы (Белые)</span>
+                </div>
+                <div class="text-xs font-semibold bg-zinc-800 px-2 py-1 rounded text-zinc-300" id="move-counter">
+                    Ход: 1
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Info, Analysis & History -->
+        <div class="flex-1 flex flex-col gap-4 p-4 lg:p-0 overflow-y-auto">
+            
+            <!-- Analysis Panel -->
+            <div id="analysis-panel" class="bg-zinc-900 border border-zinc-700 rounded-xl p-4 shadow-lg panel-transition flex flex-col gap-2">
+                <div class="flex items-center gap-2 mb-1">
+                    <i id="analysis-icon" class="fas fa-clipboard-list text-blue-400"></i>
+                    <h3 class="font-bold text-white text-sm uppercase tracking-wider">Разбор полетов</h3>
+                </div>
+                <p id="analysis-text" class="text-zinc-300 text-sm leading-relaxed">
+                    Выберите фигуру тапом, а затем нажмите на нужную клетку. Играйте согласно теории.
+                </p>
+                <!-- Progress bar -->
+                <div class="w-full bg-zinc-800 rounded-full h-1.5 mt-2 overflow-hidden" id="progress-container">
+                    <div id="theory-progress" class="bg-blue-500 h-1.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- Move History -->
+            <div class="flex-1 bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden flex flex-col min-h-[150px]">
+                <div class="bg-zinc-800/50 p-2 text-xs font-bold text-zinc-400 uppercase tracking-wider border-b border-zinc-800 text-center">
+                    История партии
+                </div>
+                <div class="flex-1 overflow-y-auto p-2" id="move-history-container">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead class="text-zinc-500 sticky top-0 bg-zinc-900/90 hidden">
+                            <tr>
+                                <th class="pb-1 w-12 text-center">#</th>
+                                <th class="pb-1 w-1/2 pl-2">Белые</th>
+                                <th class="pb-1 w-1/2 pl-2">Черные</th>
+                            </tr>
+                        </thead>
+                        <tbody id="move-history-body" class="text-zinc-300">
+                            <!-- Moves appended here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"></script>
+
+    <script>
+        const lessonsData = [
+            { id: 1, title: "Урок 1: Классический d5", desc: "Базовая расстановка. Построение треугольника c3-d4-e3.", moves: [{w: 'd4', b: 'd5'}, {w: 'Bf4', b: 'Nf6'}, {w: 'e3', b: 'e6'}, {w: 'Nf3', b: 'Bd6'}, {w: 'Bg3', b: 'O-O'}, {w: 'Nbd2', b: null}] },
+            { id: 2, title: "Урок 2: Славянское c5", desc: "Черные атакуют центр. Мы укрепляем пешкой c3.", moves: [{w: 'd4', b: 'd5'}, {w: 'Bf4', b: 'Nf6'}, {w: 'e3', b: 'c5'}, {w: 'c3', b: 'Nc6'}, {w: 'Nd2', b: 'e6'}, {w: 'Ngf3', b: null}] },
+            { id: 3, title: "Урок 3: Староиндийская", desc: "Против фианкетто на g7. Плотное развитие.", moves: [{w: 'd4', b: 'Nf6'}, {w: 'Bf4', b: 'g6'}, {w: 'e3', b: 'Bg7'}, {w: 'Nf3', b: 'O-O'}, {w: 'h3', b: 'd6'}, {w: 'Be2', b: null}] },
+            { id: 4, title: "Урок 4: Новоиндийская (b6)", desc: "Черные выводят слона на b7. Контролируем e4.", moves: [{w: 'd4', b: 'Nf6'}, {w: 'Bf4', b: 'e6'}, {w: 'e3', b: 'b6'}, {w: 'Nf3', b: 'Bb7'}, {w: 'Bd3', b: 'Be7'}, {w: 'h3', b: null}] },
+            { id: 5, title: "Урок 5: Защита Грюнфельда", desc: "Микс d5 и g6. Спокойно развиваемся.", moves: [{w: 'd4', b: 'Nf6'}, {w: 'Bf4', b: 'g6'}, {w: 'e3', b: 'Bg7'}, {w: 'Nf3', b: 'd5'}, {w: 'Be2', b: 'O-O'}, {w: 'O-O', b: null}] },
+            { id: 6, title: "Урок 6: Симметричный Bf5", desc: "Копирование вывода слона. Готовим размен.", moves: [{w: 'd4', b: 'd5'}, {w: 'Bf4', b: 'Bf5'}, {w: 'e3', b: 'e6'}, {w: 'Bd3', b: 'Bxd3'}, {w: 'Qxd3', b: 'c6'}, {w: 'Nf3', b: null}] },
+            { id: 7, title: "Урок 7: Ранний выпад Qb6", desc: "Атака на b2. Встречный выпад ферзем.", moves: [{w: 'd4', b: 'd5'}, {w: 'Bf4', b: 'Nf6'}, {w: 'e3', b: 'c5'}, {w: 'c3', b: 'Qb6'}, {w: 'Qb3', b: 'c4'}, {w: 'Qc2', b: null}] },
+            { id: 8, title: "Урок 8: Голландская f5", desc: "Лондон против агрессивного флангового удара.", moves: [{w: 'd4', b: 'f5'}, {w: 'Bf4', b: 'Nf6'}, {w: 'e3', b: 'e6'}, {w: 'Nf3', b: 'Be7'}, {w: 'h3', b: 'O-O'}, {w: 'Be2', b: null}] },
+            { id: 9, title: "Урок 9: Система Чигорина", desc: "Защита центра от ударов коня.", moves: [{w: 'd4', b: 'd5'}, {w: 'Bf4', b: 'Nc6'}, {w: 'e3', b: 'Nf6'}, {w: 'Nf3', b: 'Bg4'}, {w: 'Be2', b: 'e6'}, {w: 'Nbd2', b: null}] },
+            { id: 10, title: "Урок 10: Каро-Канн (c6)", desc: "Крепкая защита черных.", moves: [{w: 'd4', b: 'd5'}, {w: 'Bf4', b: 'c6'}, {w: 'e3', b: 'Nf6'}, {w: 'Nf3', b: 'Bf5'}, {w: 'Bd3', b: 'Bxd3'}, {w: 'cxd3', b: null}] },
+            { id: 11, title: "Урок 11: Бенони (c5)", desc: "Укрепление структуры.", moves: [{w: 'd4', b: 'c5'}, {w: 'c3', b: 'd5'}, {w: 'Bf4', b: 'Nf6'}, {w: 'e3', b: 'Nc6'}, {w: 'Nd2', b: 'e6'}, {w: 'Ngf3', b: null}] },
+            { id: 12, title: "Урок 12: Энглундовский e5", desc: "Ловушка черных. Забираем и защищаемся.", moves: [{w: 'd4', b: 'e5'}, {w: 'dxe5', b: 'Nc6'}, {w: 'Nf3', b: 'Qe7'}, {w: 'Bf4', b: 'Qb4+'}, {w: 'Bd2', b: 'Qxb2'}, {w: 'Nc3', b: null}] }
+        ];
+
+        let board = null;
+        let game = new Chess();
+        let currentLessonIndex = 0;
+        let theoryIndex = 0;
+        let gameState = 'theory'; // 'theory', 'error_delay', 'practice'
+        let moveHistoryCount = 0;
+        let resetTimeout = null;
+        
+        // Lichess Tap-to-move State
+        let selectedSquare = null;
+
+        const lessonSelect = document.getElementById('lesson-select');
+        const moveHistoryBody = document.getElementById('move-history-body');
+        const moveCounter = document.getElementById('move-counter');
+        const opponentName = document.getElementById('opponent-name');
+        
+        const analysisPanel = document.getElementById('analysis-panel');
+        const analysisIcon = document.getElementById('analysis-icon');
+        const analysisText = document.getElementById('analysis-text');
+        const theoryProgress = document.getElementById('theory-progress');
+
+        function clearHighlight() {
+            $('#board .square-55d63').removeClass('highlight-square');
+        }
+
+        function highlightSquare(square) {
+            clearHighlight();
+            $(`#board .square-${square}`).addClass('highlight-square');
+        }
+
+        function handleSquareClick(square) {
+            if (gameState === 'error_delay' || game.game_over()) return;
+            
+            const pieceObj = game.get(square);
+            
+            // Case 1: No square is selected yet
+            if (selectedSquare === null) {
+                // If clicked square has our piece, select it
+                if (pieceObj && pieceObj.color === 'w') {
+                    selectedSquare = square;
+                    highlightSquare(square);
+                }
+            } 
+            // Case 2: A square is already selected
+            else {
+                // If clicked on the exact same square, deselect
+                if (selectedSquare === square) {
+                    clearHighlight();
+                    selectedSquare = null;
+                } 
+                // If clicked on another of our pieces, change selection
+                else if (pieceObj && pieceObj.color === 'w') {
+                    selectedSquare = square;
+                    highlightSquare(square);
+                } 
+                // If clicked on an empty square or enemy piece, attempt to move
+                else {
+                    const moveAttempt = attemptPlayerMove(selectedSquare, square);
+                    clearHighlight();
+                    selectedSquare = null;
+                    
+                    if (moveAttempt === 'invalid') {
+                        // Optional: small visual feedback for invalid tap move? 
+                        // Lichess usually just deselects, which we did above.
+                    }
+                }
+            }
+        }
+
+        // Returns 'valid' or 'invalid'
+        function attemptPlayerMove(source, target) {
+            let testMove = game.move({ from: source, to: target, promotion: 'q' });
+            
+            if (testMove === null) return 'invalid';
+
+            if (gameState === 'theory') {
+                const lesson = lessonsData[currentLessonIndex];
+                const expectedMove = lesson.moves[theoryIndex].w;
+                
+                if (testMove.san === expectedMove) {
+                    // Correct move!
+                    board.position(game.fen());
+                    processCorrectTheoryMove(testMove, lesson);
+                    return 'valid';
+                } else {
+                    // Wrong move according to theory!
+                    game.undo();
+                    triggerTheoryError(testMove.san, expectedMove);
+                    return 'invalid';
+                }
+            } 
+            else if (gameState === 'practice') {
+                board.position(game.fen());
+                renderMoveHistory(testMove, true);
+                if (!game.game_over()) {
+                    setTimeout(makeEngineMove, 300);
+                }
+                return 'valid';
+            }
+            return 'invalid';
+        }
+
+        function onDragStart(source, piece) {
+            if (game.game_over() || gameState === 'error_delay') return false;
+            // Only white can move
+            if (piece.search(/^b/) !== -1) return false;
+            
+            // Clear click-to-move highlights to prevent conflicts
+            clearHighlight();
+            selectedSquare = null;
+        }
+
+        function onDrop(source, target) {
+            const status = attemptPlayerMove(source, target);
+            if (status === 'invalid') {
+                return 'snapback';
+            }
+        }
+
+        function onSnapEnd() {
+            board.position(game.fen());
+        }
+
+        function processCorrectTheoryMove(move, lesson) {
+            renderMoveHistory(move, true);
+            updateAnalysisPanel('success', 'Отлично! Правильный ход по теории.');
+            
+            const blackReply = lesson.moves[theoryIndex].b;
+            theoryIndex++;
+            updateProgress();
+            
+            if (blackReply === null) {
+                setTimeout(completeTheory, 400);
+            } else {
+                setTimeout(() => {
+                    if (gameState === 'error_delay') return;
+                    const bMove = game.move(blackReply);
+                    board.position(game.fen());
+                    renderMoveHistory(bMove, false);
+                    moveCounter.innerText = `Ход: ${theoryIndex + 1}`;
+                }, 400);
+            }
+        }
+
+        function triggerTheoryError(playedMove, correctMove) {
+            gameState = 'error_delay';
+            $('#board').addClass('error-shake');
+            setTimeout(() => $('#board').removeClass('error-shake'), 400);
+            
+            const errorMsg = `Ошибка! Вы сыграли <b>${playedMove}</b>. <br>Правильный ход: <b class="text-green-400">${correctMove}</b>. <br><span class="text-xs mt-2 block opacity-80 text-zinc-400">Перезапуск урока через 3 секунды...</span>`;
+            updateAnalysisPanel('error', errorMsg);
+            
+            resetTimeout = setTimeout(() => {
+                startLesson(currentLessonIndex);
+            }, 3500);
+        }
+
+        function completeTheory() {
+            gameState = 'practice';
+            updateAnalysisPanel('success', 'Теория пройдена! Режим практики. Компьютер перехватил управление за черных.');
+            
+            theoryProgress.style.width = '100%';
+            theoryProgress.className = "bg-green-500 h-1.5 rounded-full transition-all duration-300";
+            
+            opponentName.innerText = "Черные (ИИ Тренировка)";
+            opponentName.classList.remove('text-zinc-400');
+            opponentName.classList.add('text-green-400');
+            
+            if (game.turn() === 'b') {
+                setTimeout(makeEngineMove, 600);
+            }
+        }
+
+        function updateAnalysisPanel(type, htmlContent) {
+            analysisText.innerHTML = htmlContent;
+            
+            analysisPanel.className = "bg-zinc-900 border rounded-xl p-4 shadow-lg panel-transition flex flex-col gap-2";
+            analysisIcon.className = "fas";
+            
+            if (type === 'error') {
+                analysisPanel.classList.add('border-red-500/50', 'bg-red-950/30');
+                analysisIcon.classList.add('fa-circle-xmark', 'text-red-500');
+            } else if (type === 'success') {
+                analysisPanel.classList.add('border-green-500/50', 'bg-green-950/30');
+                analysisIcon.classList.add('fa-check-circle', 'text-green-500');
+            } else {
+                analysisPanel.classList.add('border-zinc-700');
+                analysisIcon.classList.add('fa-clipboard-list', 'text-blue-400');
+            }
+        }
+
+        function updateProgress() {
+            const lesson = lessonsData[currentLessonIndex];
+            const percent = (theoryIndex / lesson.moves.length) * 100;
+            theoryProgress.style.width = `${percent}%`;
+            theoryProgress.className = "bg-blue-500 h-1.5 rounded-full transition-all duration-300";
+        }
+
+        function renderMoveHistory(move, isWhite) {
+            if (isWhite) {
+                moveHistoryCount++;
+                const tr = document.createElement('tr');
+                tr.className = "border-b border-zinc-800/30 hover:bg-zinc-800/50 transition-colors";
+                tr.innerHTML = `
+                    <td class="py-1.5 text-center text-zinc-500">${moveHistoryCount}.</td>
+                    <td class="py-1.5 pl-2 text-white font-medium">${move.san}</td>
+                    <td class="py-1.5 pl-2 text-zinc-400" id="b-move-${moveHistoryCount}">...</td>
+                `;
+                moveHistoryBody.appendChild(tr);
+            } else {
+                const bTd = document.getElementById(`b-move-${moveHistoryCount}`);
+                if (bTd) {
+                    bTd.innerText = move.san;
+                    bTd.className = "py-1.5 pl-2 text-zinc-300 font-medium";
+                }
+            }
+            
+            const container = document.getElementById('move-history-container');
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function makeEngineMove() {
+            if (game.game_over()) return;
+            
+            const moves = game.moves();
+            if (moves.length === 0) return;
+
+            let moveIndex = -1;
+            const captures = moves.filter(m => m.includes('x'));
+            
+            if (captures.length > 0) {
+                moveIndex = moves.indexOf(captures[Math.floor(Math.random() * captures.length)]);
+            } else {
+                moveIndex = Math.floor(Math.random() * moves.length);
+            }
+
+            const bMove = game.move(moves[moveIndex]);
+            board.position(game.fen());
+            renderMoveHistory(bMove, false);
+            moveCounter.innerText = `Ход: ${moveHistoryCount + 1}`;
+            
+            if (game.game_over()) {
+                let endMsg = "Игра окончена!";
+                if(game.in_checkmate()) endMsg = "Мат!";
+                else if(game.in_draw()) endMsg = "Ничья!";
+                updateAnalysisPanel('info', endMsg);
+            }
+        }
+
+        function startLesson(index) {
+            clearTimeout(resetTimeout);
+            currentLessonIndex = index;
+            const lesson = lessonsData[index];
+            
+            game.reset();
+            board.position(game.fen());
+            
+            theoryIndex = 0;
+            gameState = 'theory';
+            moveHistoryCount = 0;
+            moveHistoryBody.innerHTML = '';
+            
+            clearHighlight();
+            selectedSquare = null;
+            
+            updateAnalysisPanel('info', `<b>${lesson.title}</b><br>${lesson.desc} Сделайте первый ход.`);
+            updateProgress();
+            
+            opponentName.innerText = "Черные (Теория)";
+            opponentName.classList.remove('text-green-400');
+            opponentName.classList.add('text-zinc-400');
+            moveCounter.innerText = "Ход: 1";
+        }
+
+        $(document).ready(function() {
+            lessonsData.forEach((lesson, index) => {
+                const opt = document.createElement('option');
+                opt.value = index;
+                opt.text = lesson.title;
+                lessonSelect.appendChild(opt);
+            });
+            
+            lessonSelect.addEventListener('change', (e) => {
+                startLesson(parseInt(e.target.value));
+            });
+
+            const config = {
+                draggable: true,
+                position: 'start',
+                onDragStart: onDragStart,
+                onDrop: onDrop,
+                onSnapEnd: onSnapEnd,
+                pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
+            };
+            
+            board = Chessboard('board', config);
+            
+            $(window).resize(() => { if(board) board.resize(); });
+
+            // Delegate click event for Tap-to-Move
+            $('#board').on('click', '.square-55d63', function() {
+                const square = $(this).attr('data-square');
+                handleSquareClick(square);
+            });
+
+            startLesson(0);
+        });
+    </script>
+</body>
+</html>
