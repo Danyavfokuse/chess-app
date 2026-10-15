@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Лондонская система: 12 уроков</title>
+  <title>Шахматный Практикум: Дебюты</title>
   
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
 
   <style>
     :root {
@@ -14,6 +14,7 @@
       --card-bg: rgba(22, 30, 46, 0.7);
       --card-border: rgba(255, 255, 255, 0.08);
       --accent: #10b981;
+      --accent-black: #6366f1;
       --danger: #ef4444;
       --warning: #f59e0b;
       --text: #f8fafc;
@@ -23,15 +24,31 @@
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; }
     body { background: radial-gradient(circle at 50% 0%, #172554 0%, var(--bg) 70%); color: var(--text); font-family: 'Plus Jakarta Sans', sans-serif; min-height: 100vh; display: flex; flex-direction: column; touch-action: manipulation; }
 
+    /* Экраны */
     .screen { display: none; width: 100%; max-width: 520px; margin: 0 auto; padding: 20px 16px 40px; }
-    .screen.active { display: flex; flex-direction: column; animation: fadeIn 0.25s ease-out; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    .screen.active { display: flex; flex-direction: column; animation: fadeIn 0.3s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
+    /* SCREEN 0: Выбор цвета */
+    .side-selector { display: flex; flex-direction: column; gap: 16px; margin-top: 20px; }
+    .side-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 20px; padding: 24px; text-align: center; cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden; }
+    .side-card:active { transform: scale(0.97); }
+    .side-card.white:hover { border-color: var(--accent); box-shadow: 0 10px 30px rgba(16, 185, 129, 0.15); }
+    .side-card.black:hover { border-color: var(--accent-black); box-shadow: 0 10px 30px rgba(99, 102, 241, 0.15); }
+    
+    .side-icon { font-size: 48px; margin-bottom: 12px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5)); }
+    .side-title { font-size: 22px; font-weight: 800; margin-bottom: 6px; }
+    .side-desc { font-size: 14px; color: var(--text-muted); line-height: 1.4; }
+
+    /* Общие стили шапки */
     .hero { margin-bottom: 24px; text-align: center; }
-    .hero-badge { display: inline-block; padding: 4px 12px; background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.3); color: var(--accent); font-size: 11px; font-weight: 700; text-transform: uppercase; border-radius: 999px; margin-bottom: 12px; }
+    .hero-badge { display: inline-block; padding: 4px 12px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); color: #fff; font-size: 11px; font-weight: 700; text-transform: uppercase; border-radius: 999px; margin-bottom: 12px; }
+    .hero-badge.w-badge { background: rgba(16, 185, 129, 0.12); border-color: rgba(16, 185, 129, 0.3); color: var(--accent); }
+    .hero-badge.b-badge { background: rgba(99, 102, 241, 0.12); border-color: rgba(99, 102, 241, 0.3); color: var(--accent-black); }
     .hero h1 { font-size: 26px; font-weight: 800; margin-bottom: 8px; }
     .hero p { color: var(--text-muted); font-size: 14px; line-height: 1.4; }
 
+    /* Прогресс */
     .overall-card { background: var(--card-bg); backdrop-filter: blur(12px); border: 1px solid var(--card-border); border-radius: 18px; padding: 16px 20px; margin-bottom: 24px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5); }
     .overall-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
     .overall-title { font-size: 14px; font-weight: 600; color: var(--text-muted); }
@@ -39,6 +56,7 @@
     .progress-track { height: 8px; background: rgba(255, 255, 255, 0.08); border-radius: 999px; overflow: hidden; }
     .progress-fill { height: 100%; background: linear-gradient(90deg, #10b981, #34d399); width: 0%; transition: width 0.4s ease; }
 
+    /* Уроки */
     .lessons-list { display: flex; flex-direction: column; gap: 12px; }
     .lesson-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; padding: 16px; cursor: pointer; display: flex; flex-direction: column; gap: 10px; transition: all 0.15s ease; }
     .lesson-card:active { transform: scale(0.98); background: rgba(30, 41, 59, 0.9); }
@@ -54,17 +72,27 @@
     .intel-streak { color: var(--warning); font-weight: 600; }
     .intel-mistakes { color: var(--text-muted); }
 
+    /* Игровой экран */
     .game-top-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
     .back-btn { background: rgba(255, 255, 255, 0.08); border: 1px solid var(--card-border); color: #fff; padding: 8px 14px; border-radius: 12px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; }
     .lesson-indicator { font-size: 13px; font-weight: 700; color: var(--text-muted); }
 
-    /* Доска + Шкала */
-    .board-wrapper { display: flex; gap: 10px; margin-bottom: 14px; align-items: stretch; width: 100%; }
+    /* Доска + Шкала (Шкала теперь справа) */
+    .board-wrapper { display: flex; gap: 10px; margin-bottom: 14px; align-items: stretch; width: 100%; flex-direction: row; }
     
-    .eval-bar { width: 22px; flex-shrink: 0; background: #2a2a2a; border-radius: 8px; position: relative; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; justify-content: flex-end; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
-    .eval-fill { background: #f8fafc; width: 100%; height: 50%; transition: height 0.6s cubic-bezier(0.25, 1, 0.5, 1); }
-    .eval-text { position: absolute; width: 100%; text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; z-index: 2; transition: all 0.3s ease; left: 0; top: 50%; transform: translateY(-50%); color: #888; }
+    /* Улучшенная шкала оценки */
+    .eval-bar-container { display: flex; flex-direction: column; width: 28px; flex-shrink: 0; }
+    .eval-bar { width: 100%; flex-grow: 1; background: #262626; border-radius: 8px; position: relative; overflow: hidden; border: 2px solid #111; display: flex; flex-direction: column; justify-content: flex-end; box-shadow: inset 0 0 10px rgba(0,0,0,0.8); }
+    .eval-fill { background: #e2e8f0; width: 100%; height: 50%; transition: height 0.6s cubic-bezier(0.25, 1, 0.5, 1); }
     
+    .eval-label-box { 
+      position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+      background: rgba(0,0,0,0.65); backdrop-filter: blur(4px); border-radius: 6px;
+      padding: 4px 0; width: 100%; text-align: center; border: 1px solid rgba(255,255,255,0.1);
+      z-index: 10; transition: top 0.4s ease;
+    }
+    .eval-text { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 800; color: #fff; }
+
     .board-box { flex-grow: 1; aspect-ratio: 1; border-radius: 10px; overflow: hidden; box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6); border: 2px solid rgba(255, 255, 255, 0.08); }
     #board { width: 100% !important; height: 100% !important; }
 
@@ -72,13 +100,24 @@
     .highlight-selected { box-shadow: inset 0 0 0 4px #eab308 !important; background-color: rgba(234, 179, 8, 0.25) !important; }
     .highlight-dest::after { content: ''; position: absolute; width: 18px; height: 18px; background: rgba(16, 185, 129, 0.7); border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none; }
 
-    .debrief-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; min-height: 86px; transition: all 0.2s ease; }
+    /* Панель разбора */
+    .debrief-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; min-height: 86px; transition: all 0.2s ease; position: relative; }
     .debrief-card.error { border-color: var(--danger); background: rgba(239, 68, 68, 0.12); }
     .debrief-card.practice { border-color: #3b82f6; background: rgba(59, 130, 246, 0.08); }
-    .debrief-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; color: var(--text-muted); }
+    .debrief-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center;}
     .debrief-text { font-size: 14px; font-weight: 600; line-height: 1.4; color: #fff; }
     .debrief-hint { font-family: 'JetBrains Mono', monospace; color: var(--warning); font-weight: 700; font-size: 15px; }
 
+    /* Кнопка отмены хода (Undo) */
+    .undo-btn { 
+      background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255,255,255,0.2); 
+      color: #fff; font-size: 10px; font-weight: 700; text-transform: uppercase; 
+      padding: 4px 10px; border-radius: 6px; cursor: pointer; display: none;
+    }
+    .undo-btn:active { background: rgba(255, 255, 255, 0.2); }
+    .practice .undo-btn { display: block; }
+
+    /* Модалки */
     .modal-overlay { position: fixed; inset: 0; background: rgba(5, 8, 15, 0.85); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; padding: 20px; z-index: 100; }
     .modal-overlay.active { display: flex; }
     .modal-box { background: #1e293b; border: 1px solid var(--card-border); border-radius: 24px; padding: 24px; width: 100%; max-width: 360px; text-align: center; }
@@ -92,11 +131,36 @@
 </head>
 <body>
 
-  <div id="homeScreen" class="screen active">
+  <!-- SCREEN 0: Выбор цвета -->
+  <div id="startScreen" class="screen active">
     <div class="hero">
-      <div class="hero-badge">Интерактивный тренажер</div>
-      <h1>Лондонская система</h1>
-      <p>Освой фундаментальный дебют за 12 практических уроков без зубрежки вариантов</p>
+      <div class="hero-badge">Шахматный практикум</div>
+      <h1>Выбери свой цвет</h1>
+      <p>Освой лучшие дебютные системы через мышечную память</p>
+    </div>
+    <div class="side-selector">
+      <div class="side-card white" onclick="selectColor('w')">
+        <div class="side-icon">♙</div>
+        <div class="side-title">Белые</div>
+        <div class="side-desc">Изучить Лондонскую систему<br>(Фундаментальный дебют)</div>
+      </div>
+      <div class="side-card black" onclick="selectColor('b')">
+        <div class="side-icon">♟</div>
+        <div class="side-title">Черные</div>
+        <div class="side-desc">Изучить Защиту Каро-Канн<br>(Непробиваемая оборона)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 1: Дашборд -->
+  <div id="homeScreen" class="screen">
+    <div class="game-top-bar" style="margin-bottom: 20px;">
+      <button onclick="goBackToStart()" class="back-btn">← Сменить цвет</button>
+    </div>
+    <div class="hero">
+      <div id="courseBadge" class="hero-badge w-badge">Интерактивный тренажер</div>
+      <h1 id="courseTitle">Лондонская система</h1>
+      <p id="courseDesc">Освой фундаментальный дебют за 12 практических уроков без зубрежки вариантов</p>
     </div>
     <div class="overall-card">
       <div class="overall-header">
@@ -108,30 +172,39 @@
     <div id="lessonsList" class="lessons-list"></div>
   </div>
 
+  <!-- SCREEN 2: Игра -->
   <div id="gameScreen" class="screen">
     <div class="game-top-bar">
       <button id="backBtn" class="back-btn">← Меню</button>
       <div id="gameLessonTitle" class="lesson-indicator">Урок 1 из 12</div>
     </div>
 
-    <!-- Обновленный контейнер с доской и шкалой -->
+    <!-- Доска + Шкала (Шкала справа) -->
     <div class="board-wrapper">
-      <div class="eval-bar">
-        <span id="evalText" class="eval-text">0.0</span>
-        <div id="evalFill" class="eval-fill"></div>
-      </div>
       <div class="board-box">
         <div id="board"></div>
+      </div>
+      <div class="eval-bar-container">
+        <div id="evalBar" class="eval-bar">
+          <div id="evalLabelBox" class="eval-label-box">
+            <span id="evalText" class="eval-text">0.0</span>
+          </div>
+          <div id="evalFill" class="eval-fill"></div>
+        </div>
       </div>
     </div>
 
     <div id="debriefCard" class="debrief-card">
-      <div class="debrief-title">Разбор полетов</div>
-      <div id="debriefText" class="debrief-text">Сделай первый ход. Играем Лондонскую систему белыми!</div>
+      <div class="debrief-title">
+        <span>Разбор полетов</span>
+        <button id="undoBtn" class="undo-btn">Отменить ход</button>
+      </div>
+      <div id="debriefText" class="debrief-text">Сделай первый ход!</div>
       <div id="debriefHint" class="debrief-hint"></div>
     </div>
   </div>
 
+  <!-- Модальное окно победы -->
   <div id="modalVictory" class="modal-overlay">
     <div class="modal-box">
       <h2>Отличная работа! 🎯</h2>
@@ -149,22 +222,43 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"></script>
 
   <script>
-    const LESSONS = [
-      { id: 1, title: "Классический ответ 1...d5", subtitle: "Симметричная структура и ранний Слон на f4", moves: [{ w: 'd4', b: 'd5' }, { w: 'Bf4', b: 'Nf6' }, { w: 'e3', b: 'e6' }, { w: 'Nf3', b: 'Bd6' }, { w: 'Bg3', b: 'O-O' }] },
-      { id: 2, title: "Староиндийский стиль 1...Nf6", subtitle: "Ответ на фианкетто королевского фланга черных", moves: [{ w: 'd4', b: 'Nf6' }, { w: 'Bf4', b: 'g6' }, { w: 'e3', b: 'Bg7' }, { w: 'Nf3', b: 'd6' }, { w: 'h3', b: 'O-O' }] },
-      { id: 3, title: "Атака по центру через 2...c5", subtitle: "Укрепление пешечной пирамиды c3-d4", moves: [{ w: 'd4', b: 'd5' }, { w: 'Bf4', b: 'c5' }, { w: 'e3', b: 'Nc6' }, { w: 'c3', b: 'Nf6' }, { w: 'Nd2', b: 'e6' }] },
-      { id: 4, title: "Выпад черного ферзя 3...Qb6", subtitle: "Защита пешки b2 и контригра", moves: [{ w: 'd4', b: 'd5' }, { w: 'Bf4', b: 'c5' }, { w: 'e3', b: 'Qb6' }, { w: 'Nc3', b: 'e6' }, { w: 'Nf3', b: 'a6' }] },
-      { id: 5, title: "Новоиндийская схема 1...e6", subtitle: "Контроль ключевого поля e5", moves: [{ w: 'd4', b: 'e6' }, { w: 'Bf4', b: 'Nf6' }, { w: 'e3', b: 'b6' }, { w: 'Nf3', b: 'Bb7' }, { w: 'Nbd2', b: 'Be7' }] },
-      { id: 6, title: "Размен белопольных слонов", subtitle: "Отступление слона на g3 для сохранения линии h", moves: [{ w: 'd4', b: 'd5' }, { w: 'Bf4', b: 'Bd6' }, { w: 'Bg3', b: 'Nf6' }, { w: 'e3', b: 'O-O' }, { w: 'Nf3', b: 'c5' }] },
+    // --- ДАННЫЕ УРОКОВ ---
+    const WHITE_LESSONS = [
+      { id: 1, title: "Классический ответ 1...d5", subtitle: "Симметричная структура и ранний Слон", moves: [{ w: 'd4', b: 'd5' }, { w: 'Bf4', b: 'Nf6' }, { w: 'e3', b: 'e6' }, { w: 'Nf3', b: 'Bd6' }, { w: 'Bg3', b: 'O-O' }] },
+      { id: 2, title: "Староиндийский стиль 1...Nf6", subtitle: "Ответ на фианкетто", moves: [{ w: 'd4', b: 'Nf6' }, { w: 'Bf4', b: 'g6' }, { w: 'e3', b: 'Bg7' }, { w: 'Nf3', b: 'd6' }, { w: 'h3', b: 'O-O' }] },
+      { id: 3, title: "Атака по центру через 2...c5", subtitle: "Укрепление пирамиды c3-d4", moves: [{ w: 'd4', b: 'd5' }, { w: 'Bf4', b: 'c5' }, { w: 'e3', b: 'Nc6' }, { w: 'c3', b: 'Nf6' }, { w: 'Nd2', b: 'e6' }] },
+      { id: 4, title: "Выпад черного ферзя 3...Qb6", subtitle: "Защита пешки b2", moves: [{ w: 'd4', b: 'd5' }, { w: 'Bf4', b: 'c5' }, { w: 'e3', b: 'Qb6' }, { w: 'Nc3', b: 'e6' }, { w: 'Nf3', b: 'a6' }] },
+      { id: 5, title: "Новоиндийская схема 1...e6", subtitle: "Контроль поля e5", moves: [{ w: 'd4', b: 'e6' }, { w: 'Bf4', b: 'Nf6' }, { w: 'e3', b: 'b6' }, { w: 'Nf3', b: 'Bb7' }, { w: 'Nbd2', b: 'Be7' }] },
+      { id: 6, title: "Размен белопольных слонов", subtitle: "Отступление на g3", moves: [{ w: 'd4', b: 'd5' }, { w: 'Bf4', b: 'Bd6' }, { w: 'Bg3', b: 'Nf6' }, { w: 'e3', b: 'O-O' }, { w: 'Nf3', b: 'c5' }] },
       { id: 7, title: "Славянский треугольник", subtitle: "Плотный позиционный зажим", moves: [{ w: 'd4', b: 'd5' }, { w: 'Bf4', b: 'c6' }, { w: 'e3', b: 'Nf6' }, { w: 'Nf3', b: 'Bf5' }, { w: 'c4', b: 'e6' }] },
-      { id: 8, title: "Агрессивный выпад ...Nh5", subtitle: "Сохранение слона через поле g5 или h3", moves: [{ w: 'd4', b: 'Nf6' }, { w: 'Bf4', b: 'd5' }, { w: 'e3', b: 'c5' }, { w: 'c3', b: 'Nc6' }, { w: 'Nd2', b: 'Nh5' }, { w: 'Bg5', b: 'h6' }] },
-      { id: 9, title: "Структура Грюнфельда", subtitle: "Быстрое развитие коня ферзевого фланга", moves: [{ w: 'd4', b: 'Nf6' }, { w: 'Bf4', b: 'g6' }, { w: 'e3', b: 'Bg7' }, { w: 'Nf3', b: 'd5' }, { w: 'c3', b: 'O-O' }] },
-      { id: 10, title: "План с конвекцией коня на e5", subtitle: "Переход к штурму королевского фланга", moves: [{ w: 'd4', b: 'd5' }, { w: 'Bf4', b: 'Nf6' }, { w: 'e3', b: 'e6' }, { w: 'Nf3', b: 'Be7' }, { w: 'Ne5', b: 'O-O' }] },
-      { id: 11, title: "Голландская защита 1...f5", subtitle: "Позиционное превосходство над ослабленной диагональю", moves: [{ w: 'd4', b: 'f5' }, { w: 'Bf4', b: 'Nf6' }, { w: 'e3', b: 'e6' }, { w: 'Nf3', b: 'b6' }, { w: 'h3', b: 'Bb7' }] },
-      { id: 12, title: "Полная лондонская гармония", subtitle: "Формирование идеального атакующего центра", moves: [{ w: 'd4', b: 'd5' }, { w: 'Bf4', b: 'Nf6' }, { w: 'e3', b: 'c5' }, { w: 'c3', b: 'e6' }, { w: 'Nd2', b: 'Nc6' }, { w: 'Ngf3', b: 'Bd6' }, { w: 'Bg3', b: 'O-O' }] }
+      { id: 8, title: "Агрессивный выпад ...Nh5", subtitle: "Сохранение слона", moves: [{ w: 'd4', b: 'Nf6' }, { w: 'Bf4', b: 'd5' }, { w: 'e3', b: 'c5' }, { w: 'c3', b: 'Nc6' }, { w: 'Nd2', b: 'Nh5' }, { w: 'Bg5', b: 'h6' }] },
+      { id: 9, title: "Структура Грюнфельда", subtitle: "Быстрое развитие ферзевого фланга", moves: [{ w: 'd4', b: 'Nf6' }, { w: 'Bf4', b: 'g6' }, { w: 'e3', b: 'Bg7' }, { w: 'Nf3', b: 'd5' }, { w: 'c3', b: 'O-O' }] },
+      { id: 10, title: "План с конем на e5", subtitle: "Переход к штурму короля", moves: [{ w: 'd4', b: 'd5' }, { w: 'Bf4', b: 'Nf6' }, { w: 'e3', b: 'e6' }, { w: 'Nf3', b: 'Be7' }, { w: 'Ne5', b: 'O-O' }] },
+      { id: 11, title: "Голландская защита 1...f5", subtitle: "Превосходство над диагональю", moves: [{ w: 'd4', b: 'f5' }, { w: 'Bf4', b: 'Nf6' }, { w: 'e3', b: 'e6' }, { w: 'Nf3', b: 'b6' }, { w: 'h3', b: 'Bb7' }] },
+      { id: 12, title: "Полная лондонская гармония", subtitle: "Идеальный атакующий центр", moves: [{ w: 'd4', b: 'd5' }, { w: 'Bf4', b: 'Nf6' }, { w: 'e3', b: 'c5' }, { w: 'c3', b: 'e6' }, { w: 'Nd2', b: 'Nc6' }, { w: 'Ngf3', b: 'Bd6' }, { w: 'Bg3', b: 'O-O' }] }
     ];
 
-    let userStats = JSON.parse(localStorage.getItem('london_stats') || '{}');
+    const BLACK_LESSONS = [
+      { id: 1, title: "Классическая система", subtitle: "Главная линия с 4...Bf5", moves: [{ w: 'e4', b: 'c6' }, { w: 'd4', b: 'd5' }, { w: 'Nc3', b: 'dxe4' }, { w: 'Nxe4', b: 'Bf5' }, { w: 'Ng3', b: 'Bg6' }] },
+      { id: 2, title: "Система Карпова", subtitle: "Надежный вариант с 4...Nd7", moves: [{ w: 'e4', b: 'c6' }, { w: 'd4', b: 'd5' }, { w: 'Nc3', b: 'dxe4' }, { w: 'Nxe4', b: 'Nd7' }, { w: 'Nf3', b: 'Ngf6' }] },
+      { id: 3, title: "Закрытая система (Advance)", subtitle: "Ответ на 3.e5 с развитием слона", moves: [{ w: 'e4', b: 'c6' }, { w: 'd4', b: 'd5' }, { w: 'e5', b: 'Bf5' }, { w: 'Nf3', b: 'e6' }, { w: 'Be2', b: 'Ne7' }] },
+      { id: 4, title: "Закрытая система: Подрыв", subtitle: "Контрудар 3...c5 против центра", moves: [{ w: 'e4', b: 'c6' }, { w: 'd4', b: 'd5' }, { w: 'e5', b: 'c5' }, { w: 'dxc5', b: 'Nc6' }, { w: 'Nf3', b: 'Bg4' }] },
+      { id: 5, title: "Разменная система", subtitle: "Спокойная игра и контроль линий", moves: [{ w: 'e4', b: 'c6' }, { w: 'd4', b: 'd5' }, { w: 'exd5', b: 'cxd5' }, { w: 'Bd3', b: 'Nc6' }, { w: 'c3', b: 'Nf6' }] },
+      { id: 6, title: "Атака Панова", subtitle: "Борьба против изолятора", moves: [{ w: 'e4', b: 'c6' }, { w: 'd4', b: 'd5' }, { w: 'exd5', b: 'cxd5' }, { w: 'c4', b: 'Nf6' }, { w: 'Nc3', b: 'e6' }] },
+      { id: 7, title: "Фантазийный вариант", subtitle: "Ответ на агрессивное 3.f3", moves: [{ w: 'e4', b: 'c6' }, { w: 'd4', b: 'd5' }, { w: 'f3', b: 'dxe4' }, { w: 'fxe4', b: 'e5' }, { w: 'Nf3', b: 'Be6' }] },
+      { id: 8, title: "Система двух коней", subtitle: "Развитие против ранних коней", moves: [{ w: 'e4', b: 'c6' }, { w: 'Nf3', b: 'd5' }, { w: 'Nc3', b: 'Bg4' }, { w: 'h3', b: 'Bxf3' }, { w: 'Qxf3', b: 'e6' }] },
+      { id: 9, title: "Вариант Тартаковера", subtitle: "Острая игра со сдвоенными пешками", moves: [{ w: 'e4', b: 'c6' }, { w: 'd4', b: 'd5' }, { w: 'Nc3', b: 'dxe4' }, { w: 'Nxe4', b: 'Nf6' }, { w: 'Nxf6+', b: 'exf6' }] },
+      { id: 10, title: "Вариант Бронштейна", subtitle: "Взятие пешкой 'g'", moves: [{ w: 'e4', b: 'c6' }, { w: 'd4', b: 'd5' }, { w: 'Nc3', b: 'dxe4' }, { w: 'Nxe4', b: 'Nf6' }, { w: 'Nxf6+', b: 'gxf6' }] },
+      { id: 11, title: "Система Гургенидзе", subtitle: "Нестандартное фианкетто", moves: [{ w: 'e4', b: 'c6' }, { w: 'd4', b: 'd5' }, { w: 'Nc3', b: 'g6' }, { w: 'h3', b: 'Bg7' }, { w: 'Nf3', b: 'Nf6' }] },
+      { id: 12, title: "Псевдо-Панов", subtitle: "Реакция на раннее 2.c4", moves: [{ w: 'e4', b: 'c6' }, { w: 'c4', b: 'd5' }, { w: 'exd5', b: 'cxd5' }, { w: 'cxd5', b: 'Nf6' }, { w: 'Nc3', b: 'Nxd5' }] }
+    ];
+
+    // --- СОСТОЯНИЕ ---
+    let userColor = 'w';
+    let currentLessonsList = WHITE_LESSONS;
+    let userStats = JSON.parse(localStorage.getItem('chess_stats') || '{"w":{}, "b":{}}');
+    if (!userStats.w) userStats = {w:{}, b:{}};
+
     let currentLesson = null;
     let stepIndex = 0;
     let game = null;
@@ -172,8 +266,37 @@
     let selectedSquare = null;
     let isPracticeMode = false;
 
-    function saveStats() { localStorage.setItem('london_stats', JSON.stringify(userStats)); renderDashboard(); }
-    function getLessonStat(id) { if (!userStats[id]) userStats[id] = { completed: false, mistakes: 0, bestMoveIndex: 0 }; return userStats[id]; }
+    // --- ФУНКЦИИ ---
+    function saveStats() { localStorage.setItem('chess_stats', JSON.stringify(userStats)); renderDashboard(); }
+    function getLessonStat(id) { 
+      if (!userStats[userColor][id]) userStats[userColor][id] = { completed: false, mistakes: 0, bestMoveIndex: 0 }; 
+      return userStats[userColor][id]; 
+    }
+
+    function selectColor(color) {
+      userColor = color;
+      currentLessonsList = color === 'w' ? WHITE_LESSONS : BLACK_LESSONS;
+      
+      const badge = document.getElementById('courseBadge');
+      if (color === 'w') {
+        document.getElementById('courseTitle').innerText = "Лондонская система";
+        document.getElementById('courseDesc').innerText = "Освой фундаментальный дебют за белых за 12 уроков";
+        badge.className = "hero-badge w-badge";
+      } else {
+        document.getElementById('courseTitle').innerText = "Защита Каро-Канн";
+        document.getElementById('courseDesc').innerText = "Освой непробиваемую оборону за черных за 12 уроков";
+        badge.className = "hero-badge b-badge";
+      }
+
+      document.getElementById('startScreen').classList.remove('active');
+      document.getElementById('homeScreen').classList.add('active');
+      renderDashboard();
+    }
+
+    function goBackToStart() {
+      document.getElementById('homeScreen').classList.remove('active');
+      document.getElementById('startScreen').classList.add('active');
+    }
 
     function toRussianNotation(san) {
       if (!san) return ''; let piece = 'Пешка'; let rest = san;
@@ -186,24 +309,46 @@
 
     function renderDashboard() {
       const listEl = document.getElementById('lessonsList'); listEl.innerHTML = ''; let completedCount = 0;
-      LESSONS.forEach(l => {
+      currentLessonsList.forEach(l => {
         const stat = getLessonStat(l.id); if (stat.completed) completedCount++;
-        let hintHtml = stat.completed ? `<div class="badge-status done">Пройден ★</div>` : (stat.bestMoveIndex > 0 ? (l.moves.length - stat.bestMoveIndex === 1 ? `<div class="badge-status new" style="color:var(--warning)">Остался 1 рывок!</div>` : `<div class="badge-status new">Ход ${stat.bestMoveIndex} из ${l.moves.length}</div>`) : `<div class="badge-status new">Не начат</div>`);
+        let hintColor = userColor === 'w' ? 'var(--accent)' : 'var(--accent-black)';
+        let hintHtml = stat.completed ? `<div class="badge-status done" style="color:${hintColor}; border-color:${hintColor}; background:rgba(255,255,255,0.1)">Пройден ★</div>` : 
+          (stat.bestMoveIndex > 0 ? (l.moves.length - stat.bestMoveIndex === 1 ? `<div class="badge-status new" style="color:var(--warning)">Остался 1 рывок!</div>` : `<div class="badge-status new">Ход ${stat.bestMoveIndex} из ${l.moves.length}</div>`) : `<div class="badge-status new">Не начат</div>`);
+        
         const card = document.createElement('div'); card.className = `lesson-card ${stat.completed ? 'completed' : ''}`;
+        if(stat.completed && userColor === 'b') card.style.borderColor = 'rgba(99, 102, 241, 0.4)';
+        
         card.innerHTML = `<div class="lesson-top"><div><div class="lesson-num">Урок ${l.id}</div><div class="lesson-name">${l.title}</div></div>${hintHtml}</div><div class="lesson-intel"><div class="intel-streak">${l.subtitle}</div><div class="intel-mistakes">Ошибок допущено: <b>${stat.mistakes}</b></div></div>`;
         card.addEventListener('click', () => startLesson(l.id)); listEl.appendChild(card);
       });
-      const percent = Math.round((completedCount / LESSONS.length) * 100) || 0;
-      document.getElementById('overallPercent').innerText = `${percent}%`; document.getElementById('overallBar').style.width = `${percent}%`;
+      const percent = Math.round((completedCount / currentLessonsList.length) * 100) || 0;
+      document.getElementById('overallPercent').innerText = `${percent}%`; 
+      
+      const bar = document.getElementById('overallBar');
+      bar.style.width = `${percent}%`;
+      bar.style.background = userColor === 'w' ? 'linear-gradient(90deg, #10b981, #34d399)' : 'linear-gradient(90deg, #6366f1, #818cf8)';
+      document.getElementById('overallPercent').style.color = userColor === 'w' ? 'var(--accent)' : 'var(--accent-black)';
     }
 
     function startLesson(id) {
-      currentLesson = LESSONS.find(l => l.id === id); stepIndex = 0; selectedSquare = null; isPracticeMode = false;
+      currentLesson = currentLessonsList.find(l => l.id === id); stepIndex = 0; selectedSquare = null; isPracticeMode = false;
       document.getElementById('homeScreen').classList.remove('active'); document.getElementById('gameScreen').classList.add('active');
       document.getElementById('gameLessonTitle').innerText = `Урок ${currentLesson.id} из 12`;
-      setDebrief('Ход белых. Сделай теоретический ход.', false);
+      
       initChessboard();
-      updateEvalBar(); // Исходная позиция
+      
+      if (userColor === 'b') {
+        setDebrief('Робот делает первый ход...', false);
+        setTimeout(() => {
+          game.move(currentLesson.moves[0].w);
+          board.position(game.fen());
+          updateEvalBar();
+          setDebrief('Твой ход за черных согласно теории.', false);
+        }, 500);
+      } else {
+        setDebrief('Ход белых. Сделай теоретический ход.', false);
+        updateEvalBar(); 
+      }
     }
 
     function setDebrief(text, isError = false, hint = '', isPractice = false) {
@@ -212,53 +357,52 @@
       card.classList.remove('error', 'practice'); if (isError) card.classList.add('error'); if (isPractice) card.classList.add('practice');
     }
 
-    /* Получение оценки (Evaluation) из API */
+    /* Шкала оценки: вращается вместе с доской */
     async function updateEvalBar() {
       try {
-        const res = await fetch('https://chess-api.com/v1', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ fen: game.fen(), depth: 8 }) // Уменьшена глубина для скорости
-        });
+        const res = await fetch('https://chess-api.com/v1', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fen: game.fen(), depth: 8 }) });
         const data = await res.json();
         
-        // Получаем оценку (в пешках, для белых +)
         let evalValue = data.eval ?? 0;
         let textVal = evalValue > 0 ? `+${evalValue.toFixed(1)}` : evalValue.toFixed(1);
-        
-        // Если мат
-        if (data.mate) {
-          textVal = `M${Math.abs(data.mate)}`;
-          evalValue = data.mate > 0 ? 10 : -10;
-        }
+        if (data.mate) { textVal = `M${Math.abs(data.mate)}`; evalValue = data.mate > 0 ? 10 : -10; }
 
-        // Ограничиваем от -10 до 10 для шкалы
         let clamped = Math.max(-10, Math.min(10, evalValue));
-        // Нормализуем в проценты (0.0 = 50% высоты)
-        let percent = 50 + (clamped / 10) * 50;
+        let percent = 50 + (clamped / 10) * 50; // 0.0 = 50%. +10 = 100%. -10 = 0%.
         
         const fill = document.getElementById('evalFill');
+        const box = document.getElementById('evalLabelBox');
         const text = document.getElementById('evalText');
+        const bar = document.getElementById('evalBar');
         
+        // Если мы играем черными, мы физически переворачиваем шкалу через CSS, 
+        // чтобы белая часть всегда была внизу, как на Lichess
+        if(userColor === 'b') {
+            bar.style.transform = 'rotate(180deg)';
+            box.style.transform = 'translate(-50%, -50%) rotate(-180deg)';
+        } else {
+            bar.style.transform = 'none';
+            box.style.transform = 'translate(-50%, -50%)';
+        }
+
         fill.style.height = `${percent}%`;
         text.innerText = textVal;
 
-        // Двигаем текст, чтобы он не сливался с фоном
-        if (percent > 60) {
-            text.style.top = 'auto'; text.style.bottom = '8px'; text.style.transform = 'none'; text.style.color = '#333';
-        } else if (percent < 40) {
-            text.style.top = '8px'; text.style.bottom = 'auto'; text.style.transform = 'none'; text.style.color = '#ddd';
-        } else {
-            text.style.top = '50%'; text.style.bottom = 'auto'; text.style.transform = 'translateY(-50%)'; text.style.color = '#888';
-        }
-      } catch (e) {
-        console.log("Оценка не загрузилась", e);
-      }
+        // Позиционируем пузырек с текстом
+        if (percent > 85) box.style.top = '15%';
+        else if (percent < 15) box.style.top = '85%';
+        else box.style.top = `${100 - percent}%`;
+
+      } catch (e) { console.log("Оценка не загрузилась"); }
     }
 
     function initChessboard() {
       game = new Chess();
-      const config = { position: 'start', draggable: false, pieceTheme: 'https://cdn.jsdelivr.net/gh/lichess-org/lila@master/public/piece/cburnett/{piece}.svg', moveSpeed: 150 };
+      const config = { 
+        position: 'start', draggable: false, 
+        orientation: userColor === 'w' ? 'white' : 'black',
+        pieceTheme: 'https://cdn.jsdelivr.net/gh/lichess-org/lila@master/public/piece/cburnett/{piece}.svg', moveSpeed: 150 
+      };
       board = Chessboard('board', config); $(window).resize(board.resize); setupTapHandlers();
     }
 
@@ -267,7 +411,7 @@
 
     function handleSquareTap(square) {
       const piece = game.get(square);
-      if (piece && piece.color === 'w') {
+      if (piece && piece.color === userColor) { // Можно выделять только свои фигуры
         selectedSquare = square; removeHighlights(); $(`#board .square-${square}`).addClass('highlight-selected');
         game.moves({ square: square, verbose: true }).forEach(m => $(`#board .square-${m.to}`).addClass('highlight-dest')); return;
       }
@@ -275,7 +419,7 @@
     }
 
     function checkGameStatus() {
-      if (game.in_checkmate()) { setDebrief(game.turn() === 'w' ? 'Мат! Ты проиграл.' : 'Мат! Ты победил ИИ!', false, '', true); return true; }
+      if (game.in_checkmate()) { setDebrief(game.turn() === userColor ? 'Мат! Ты проиграл.' : 'Мат! Ты победил ИИ!', false, '', true); return true; }
       if (game.in_draw() || game.in_stalemate()) { setDebrief('Ничья!', false, '', true); return true; }
       return false;
     }
@@ -283,23 +427,26 @@
     async function fetchAiMove() {
       if (checkGameStatus()) return;
       try {
-        const res = await fetch('https://chess-api.com/v1', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fen: game.fen(), depth: 10 })
-        });
+        const res = await fetch('https://chess-api.com/v1', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fen: game.fen(), depth: 10 }) });
         const data = await res.json();
         if (data.from && data.to) { game.move({ from: data.from, to: data.to, promotion: data.promotion || 'q' }); } else if (data.move) { game.move(data.move); }
-        board.position(game.fen());
-        updateEvalBar(); // Обновляем оценку после хода ИИ
-        if (!checkGameStatus()) setDebrief('Твой ход! Продолжай практику.', false, '', true);
+        board.position(game.fen()); updateEvalBar();
+        if (!checkGameStatus()) setDebrief('Твой ход! Ищи лучшее продолжение.', false, '', true);
       } catch (err) {
         const moves = game.moves();
-        if (moves.length > 0) {
-          game.move(moves[Math.floor(Math.random() * moves.length)]); board.position(game.fen());
-          updateEvalBar();
-          if (!checkGameStatus()) setDebrief('Твой ход! (ИИ оффлайн)', false, '', true);
-        }
+        if (moves.length > 0) { game.move(moves[Math.floor(Math.random() * moves.length)]); board.position(game.fen()); updateEvalBar(); if (!checkGameStatus()) setDebrief('Твой ход! (ИИ оффлайн)', false, '', true); }
       }
     }
+
+    /* КНОПКА ОТМЕНЫ ХОДА В ПРАКТИКЕ */
+    document.getElementById('undoBtn').addEventListener('click', () => {
+      if (!isPracticeMode) return;
+      game.undo(); // Откат хода ИИ
+      game.undo(); // Откат твоего хода
+      board.position(game.fen());
+      updateEvalBar();
+      setDebrief('Ход отменен. Попробуй найти вариант сильнее!', false, '', true);
+    });
 
     function attemptMove(from, to) {
       const move = game.move({ from: from, to: to, promotion: 'q' }); if (!move) return;
@@ -309,35 +456,58 @@
         setDebrief('ИИ думает...', false, '', true); setTimeout(fetchAiMove, 200); return;
       }
 
-      const expectedMoveSan = currentLesson.moves[stepIndex].w;
+      // ЛОГИКА ТЕОРИИ
+      const expectedMoveSan = userColor === 'w' ? currentLesson.moves[stepIndex].w : currentLesson.moves[stepIndex].b;
+      
       if (move.san === expectedMoveSan) {
-        board.position(game.fen()); setDebrief('Верно! Робот отвечает...', false);
-        updateEvalBar(); // Обновляем оценку после нашего хода
+        board.position(game.fen()); setDebrief('Верно! Робот отвечает...', false); updateEvalBar();
 
         const stat = getLessonStat(currentLesson.id); if (stepIndex + 1 > stat.bestMoveIndex) { stat.bestMoveIndex = stepIndex + 1; saveStats(); }
+        
         setTimeout(() => {
-          game.move(currentLesson.moves[stepIndex].b); board.position(game.fen());
-          updateEvalBar(); // Обновляем оценку после хода робота из книги
-          stepIndex++;
-          if (stepIndex >= currentLesson.moves.length) {
+          if (userColor === 'w') {
+              game.move(currentLesson.moves[stepIndex].b); 
+          } else {
+              stepIndex++;
+              if (stepIndex < currentLesson.moves.length) game.move(currentLesson.moves[stepIndex].w);
+          }
+          
+          board.position(game.fen()); updateEvalBar();
+          
+          if ((userColor === 'w' && stepIndex + 1 >= currentLesson.moves.length) || (userColor === 'b' && stepIndex >= currentLesson.moves.length)) {
             stat.completed = true; saveStats();
             document.getElementById('modalDesc').innerText = `Урок ${currentLesson.id} «${currentLesson.title}» пройден без ошибок!`;
             document.getElementById('modalVictory').classList.add('active');
-          } else { setDebrief('Твой ход! Продолжай структуру.', false); }
-        }, 350);
+          } else { 
+            if (userColor === 'w') stepIndex++;
+            setDebrief('Твой ход! Продолжай структуру.', false); 
+          }
+        }, 400);
       } else {
         game.undo(); const stat = getLessonStat(currentLesson.id); stat.mistakes++; saveStats();
         setDebrief(`Неверный ход (${toRussianNotation(move.san)}). Партия сброшена!`, true, `Правильно: ${toRussianNotation(expectedMoveSan)}`);
-        setTimeout(() => { game.reset(); board.start(false); stepIndex = 0; updateEvalBar(); }, 1200);
+        
+        setTimeout(() => { 
+          game.reset(); 
+          stepIndex = 0; 
+          if (userColor === 'b') {
+             game.move(currentLesson.moves[0].w);
+             board.position(game.fen());
+             setDebrief('Твой ход за черных согласно теории.', false);
+          } else {
+             board.start(false); 
+             setDebrief('Ход белых. Сделай теоретический ход.', false);
+          }
+          updateEvalBar(); 
+        }, 1500);
       }
     }
 
-    document.getElementById('modalPracticeBtn').addEventListener('click', () => { document.getElementById('modalVictory').classList.remove('active'); isPracticeMode = true; setDebrief('Практика: игра против ИИ (~1700). Твой ход!', false, '', true); removeHighlights(); });
+    document.getElementById('modalPracticeBtn').addEventListener('click', () => { document.getElementById('modalVictory').classList.remove('active'); isPracticeMode = true; setDebrief('Практика против ИИ. У тебя перевес — реализуй его! (Доступна отмена хода)', false, '', true); removeHighlights(); if(userColor==='b') { fetchAiMove(); } });
     document.getElementById('backBtn').addEventListener('click', () => { document.getElementById('gameScreen').classList.remove('active'); document.getElementById('homeScreen').classList.add('active'); renderDashboard(); });
     document.getElementById('modalHomeBtn').addEventListener('click', () => { document.getElementById('modalVictory').classList.remove('active'); document.getElementById('gameScreen').classList.remove('active'); document.getElementById('homeScreen').classList.add('active'); renderDashboard(); });
-    document.getElementById('modalNextBtn').addEventListener('click', () => { document.getElementById('modalVictory').classList.remove('active'); const nextId = currentLesson.id + 1; if (nextId <= LESSONS.length) startLesson(nextId); else { document.getElementById('gameScreen').classList.remove('active'); document.getElementById('homeScreen').classList.add('active'); renderDashboard(); } });
+    document.getElementById('modalNextBtn').addEventListener('click', () => { document.getElementById('modalVictory').classList.remove('active'); const nextId = currentLesson.id + 1; if (nextId <= currentLessonsList.length) startLesson(nextId); else { document.getElementById('gameScreen').classList.remove('active'); document.getElementById('homeScreen').classList.add('active'); renderDashboard(); } });
 
-    renderDashboard();
   </script>
 </body>
 </html>
