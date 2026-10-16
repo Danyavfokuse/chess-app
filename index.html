@@ -101,15 +101,10 @@
     .debrief-hint { font-family: 'JetBrains Mono', monospace; color: var(--warning); font-weight: 700; font-size: 15px; }
     @keyframes pulse { from { opacity: 0.6; } to { opacity: 1; } }
 
-    /* Новая аккуратная кнопка "Отменить ход" */
+    /* Кнопка "Отменить ход" */
     .practice-actions { display: none; margin-top: 12px; }
     .practice-mode .practice-actions { display: flex; gap: 10px; }
-    
-    .btn-undo-large { 
-      flex: 1; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); 
-      color: var(--warning); padding: 14px; border-radius: 14px; font-size: 14px; 
-      font-weight: 700; cursor: pointer; text-align: center; transition: 0.2s;
-    }
+    .btn-undo-large { flex: 1; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); color: var(--warning); padding: 14px; border-radius: 14px; font-size: 14px; font-weight: 700; cursor: pointer; text-align: center; transition: 0.2s; }
     .btn-undo-large:active { background: rgba(245, 158, 11, 0.2); transform: scale(0.98); }
     .btn-undo-large:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
 
@@ -127,7 +122,6 @@
 </head>
 <body>
 
-  <!-- SCREEN 0: Выбор цвета -->
   <div id="startScreen" class="screen active">
     <div class="hero">
       <div class="hero-badge">Шахматный практикум</div>
@@ -148,7 +142,6 @@
     </div>
   </div>
 
-  <!-- SCREEN 1: Дашборд -->
   <div id="homeScreen" class="screen">
     <div class="game-top-bar" style="margin-bottom: 20px;">
       <button onclick="goBackToStart()" class="back-btn">← Сменить цвет</button>
@@ -168,41 +161,30 @@
     <div id="lessonsList" class="lessons-list"></div>
   </div>
 
-  <!-- SCREEN 2: Игра -->
   <div id="gameScreen" class="screen">
     <div class="game-top-bar">
       <button id="backBtn" class="back-btn">← Меню</button>
       <div id="gameLessonTitle" class="lesson-indicator">Урок 1 из 12</div>
     </div>
-
-    <!-- Доска + Шкала -->
     <div class="board-wrapper">
-      <div class="board-box">
-        <div id="board"></div>
-      </div>
+      <div class="board-box"><div id="board"></div></div>
       <div class="eval-bar-container">
         <div id="evalBar" class="eval-bar">
-          <div id="evalLabelBox" class="eval-label-box">
-            <span id="evalText" class="eval-text">0.0</span>
-          </div>
+          <div id="evalLabelBox" class="eval-label-box"><span id="evalText" class="eval-text">0.0</span></div>
           <div id="evalFill" class="eval-fill"></div>
         </div>
       </div>
     </div>
-
     <div id="debriefCard" class="debrief-card">
       <div class="debrief-title">Разбор полетов</div>
       <div id="debriefText" class="debrief-text">Сделай первый ход!</div>
       <div id="debriefHint" class="debrief-hint"></div>
     </div>
-
-    <!-- Новая отдельная панель кнопок для практики -->
     <div class="practice-actions">
       <button id="undoActionBtn" class="btn-undo-large">↺ Отменить ход</button>
     </div>
   </div>
 
-  <!-- Модалки -->
   <div id="modalVictory" class="modal-overlay">
     <div class="modal-box">
       <h2>Отличная работа! 🎯</h2>
@@ -220,38 +202,37 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"></script>
 
   <script>
-    // --- ДАННЫЕ УРОКОВ ---
+    // --- ОБНОВЛЕННЫЕ ДАННЫЕ УРОКОВ (Добавлено по 2 полных хода) ---
     const WHITE_LESSONS = [
-      { id: 1, title: "Классический ответ 1...d5", subtitle: "Симметричная структура и ранний Слон", moves: [{ w: 'd4', b: 'd5' }, { w: 'Bf4', b: 'Nf6' }, { w: 'e3', b: 'e6' }, { w: 'Nf3', b: 'Bd6' }, { w: 'Bg3', b: 'O-O' }] },
-      { id: 2, title: "Староиндийский стиль 1...Nf6", subtitle: "Ответ на фианкетто", moves: [{ w: 'd4', b: 'Nf6' }, { w: 'Bf4', b: 'g6' }, { w: 'e3', b: 'Bg7' }, { w: 'Nf3', b: 'd6' }, { w: 'h3', b: 'O-O' }] },
-      { id: 3, title: "Атака по центру через 2...c5", subtitle: "Укрепление пирамиды c3-d4", moves: [{ w: 'd4', b: 'd5' }, { w: 'Bf4', b: 'c5' }, { w: 'e3', b: 'Nc6' }, { w: 'c3', b: 'Nf6' }, { w: 'Nd2', b: 'e6' }] },
-      { id: 4, title: "Выпад черного ферзя 3...Qb6", subtitle: "Защита пешки b2", moves: [{ w: 'd4', b: 'd5' }, { w: 'Bf4', b: 'c5' }, { w: 'e3', b: 'Qb6' }, { w: 'Nc3', b: 'e6' }, { w: 'Nf3', b: 'a6' }] },
-      { id: 5, title: "Новоиндийская схема 1...e6", subtitle: "Контроль поля e5", moves: [{ w: 'd4', b: 'e6' }, { w: 'Bf4', b: 'Nf6' }, { w: 'e3', b: 'b6' }, { w: 'Nf3', b: 'Bb7' }, { w: 'Nbd2', b: 'Be7' }] },
-      { id: 6, title: "Размен белопольных слонов", subtitle: "Отступление на g3", moves: [{ w: 'd4', b: 'd5' }, { w: 'Bf4', b: 'Bd6' }, { w: 'Bg3', b: 'Nf6' }, { w: 'e3', b: 'O-O' }, { w: 'Nf3', b: 'c5' }] },
-      { id: 7, title: "Славянский треугольник", subtitle: "Плотный позиционный зажим", moves: [{ w: 'd4', b: 'd5' }, { w: 'Bf4', b: 'c6' }, { w: 'e3', b: 'Nf6' }, { w: 'Nf3', b: 'Bf5' }, { w: 'c4', b: 'e6' }] },
-      { id: 8, title: "Агрессивный выпад ...Nh5", subtitle: "Сохранение слона", moves: [{ w: 'd4', b: 'Nf6' }, { w: 'Bf4', b: 'd5' }, { w: 'e3', b: 'c5' }, { w: 'c3', b: 'Nc6' }, { w: 'Nd2', b: 'Nh5' }, { w: 'Bg5', b: 'h6' }] },
-      { id: 9, title: "Структура Грюнфельда", subtitle: "Быстрое развитие ферзевого фланга", moves: [{ w: 'd4', b: 'Nf6' }, { w: 'Bf4', b: 'g6' }, { w: 'e3', b: 'Bg7' }, { w: 'Nf3', b: 'd5' }, { w: 'c3', b: 'O-O' }] },
-      { id: 10, title: "План с конем на e5", subtitle: "Переход к штурму короля", moves: [{ w: 'd4', b: 'd5' }, { w: 'Bf4', b: 'Nf6' }, { w: 'e3', b: 'e6' }, { w: 'Nf3', b: 'Be7' }, { w: 'Ne5', b: 'O-O' }] },
-      { id: 11, title: "Голландская защита 1...f5", subtitle: "Превосходство над диагональю", moves: [{ w: 'd4', b: 'f5' }, { w: 'Bf4', b: 'Nf6' }, { w: 'e3', b: 'e6' }, { w: 'Nf3', b: 'b6' }, { w: 'h3', b: 'Bb7' }] },
-      { id: 12, title: "Полная лондонская гармония", subtitle: "Идеальный атакующий центр", moves: [{ w: 'd4', b: 'd5' }, { w: 'Bf4', b: 'Nf6' }, { w: 'e3', b: 'c5' }, { w: 'c3', b: 'e6' }, { w: 'Nd2', b: 'Nc6' }, { w: 'Ngf3', b: 'Bd6' }, { w: 'Bg3', b: 'O-O' }] }
+      { id: 1, title: "Классический ответ 1...d5", subtitle: "Симметричная структура и ранний Слон", moves: [{ w: 'd4', b: 'd5' }, { w: 'Bf4', b: 'Nf6' }, { w: 'e3', b: 'e6' }, { w: 'Nf3', b: 'Bd6' }, { w: 'Bg3', b: 'O-O' }, { w: 'Bd3', b: 'c5' }, { w: 'c3', b: 'Nc6' }] },
+      { id: 2, title: "Староиндийский стиль 1...Nf6", subtitle: "Ответ на фианкетто", moves: [{ w: 'd4', b: 'Nf6' }, { w: 'Bf4', b: 'g6' }, { w: 'e3', b: 'Bg7' }, { w: 'Nf3', b: 'd6' }, { w: 'h3', b: 'O-O' }, { w: 'Be2', b: 'c5' }, { w: 'O-O', b: 'Nc6' }] },
+      { id: 3, title: "Атака по центру через 2...c5", subtitle: "Укрепление пирамиды c3-d4", moves: [{ w: 'd4', b: 'd5' }, { w: 'Bf4', b: 'c5' }, { w: 'e3', b: 'Nc6' }, { w: 'c3', b: 'Nf6' }, { w: 'Nd2', b: 'e6' }, { w: 'Ngf3', b: 'Bd6' }, { w: 'Bg3', b: 'O-O' }] },
+      { id: 4, title: "Выпад черного ферзя 3...Qb6", subtitle: "Защита пешки b2", moves: [{ w: 'd4', b: 'd5' }, { w: 'Bf4', b: 'c5' }, { w: 'e3', b: 'Qb6' }, { w: 'Nc3', b: 'e6' }, { w: 'Nf3', b: 'a6' }, { w: 'Na4', b: 'Qa5+' }, { w: 'c3', b: 'Nd7' }] },
+      { id: 5, title: "Новоиндийская схема 1...e6", subtitle: "Контроль поля e5", moves: [{ w: 'd4', b: 'e6' }, { w: 'Bf4', b: 'Nf6' }, { w: 'e3', b: 'b6' }, { w: 'Nf3', b: 'Bb7' }, { w: 'Nbd2', b: 'Be7' }, { w: 'h3', b: 'O-O' }, { w: 'Bd3', b: 'c5' }] },
+      { id: 6, title: "Размен белопольных слонов", subtitle: "Отступление на g3", moves: [{ w: 'd4', b: 'd5' }, { w: 'Bf4', b: 'Bd6' }, { w: 'Bg3', b: 'Nf6' }, { w: 'e3', b: 'O-O' }, { w: 'Nf3', b: 'c5' }, { w: 'c3', b: 'Nc6' }, { w: 'Nbd2', b: 'b6' }] },
+      { id: 7, title: "Славянский треугольник", subtitle: "Плотный позиционный зажим", moves: [{ w: 'd4', b: 'd5' }, { w: 'Bf4', b: 'c6' }, { w: 'e3', b: 'Nf6' }, { w: 'Nf3', b: 'Bf5' }, { w: 'c4', b: 'e6' }, { w: 'Nc3', b: 'Nbd7' }, { w: 'Qb3', b: 'Qb6' }] },
+      { id: 8, title: "Агрессивный выпад ...Nh5", subtitle: "Сохранение слона", moves: [{ w: 'd4', b: 'Nf6' }, { w: 'Bf4', b: 'd5' }, { w: 'e3', b: 'c5' }, { w: 'c3', b: 'Nc6' }, { w: 'Nd2', b: 'Nh5' }, { w: 'Bg5', b: 'h6' }, { w: 'Bh4', b: 'g6' }, { w: 'Be2', b: 'Ng7' }] },
+      { id: 9, title: "Структура Грюнфельда", subtitle: "Быстрое развитие ферзевого фланга", moves: [{ w: 'd4', b: 'Nf6' }, { w: 'Bf4', b: 'g6' }, { w: 'e3', b: 'Bg7' }, { w: 'Nf3', b: 'd5' }, { w: 'c3', b: 'O-O' }, { w: 'h3', b: 'c5' }, { w: 'Nbd2', b: 'Nc6' }] },
+      { id: 10, title: "План с конем на e5", subtitle: "Переход к штурму короля", moves: [{ w: 'd4', b: 'd5' }, { w: 'Bf4', b: 'Nf6' }, { w: 'e3', b: 'e6' }, { w: 'Nf3', b: 'Be7' }, { w: 'Ne5', b: 'O-O' }, { w: 'Nd2', b: 'c5' }, { w: 'c3', b: 'Nc6' }] },
+      { id: 11, title: "Голландская защита 1...f5", subtitle: "Превосходство над диагональю", moves: [{ w: 'd4', b: 'f5' }, { w: 'Bf4', b: 'Nf6' }, { w: 'e3', b: 'e6' }, { w: 'Nf3', b: 'b6' }, { w: 'h3', b: 'Bb7' }, { w: 'Be2', b: 'Be7' }, { w: 'O-O', b: 'O-O' }] },
+      { id: 12, title: "Полная лондонская гармония", subtitle: "Идеальный атакующий центр", moves: [{ w: 'd4', b: 'd5' }, { w: 'Bf4', b: 'Nf6' }, { w: 'e3', b: 'c5' }, { w: 'c3', b: 'e6' }, { w: 'Nd2', b: 'Nc6' }, { w: 'Ngf3', b: 'Bd6' }, { w: 'Bg3', b: 'O-O' }, { w: 'Bd3', b: 'b6' }, { w: 'Qe2', b: 'Bb7' }] }
     ];
 
     const BLACK_LESSONS = [
-      { id: 1, title: "Классическая система", subtitle: "Главная линия с 4...Bf5", moves: [{ w: 'e4', b: 'c6' }, { w: 'd4', b: 'd5' }, { w: 'Nc3', b: 'dxe4' }, { w: 'Nxe4', b: 'Bf5' }, { w: 'Ng3', b: 'Bg6' }] },
-      { id: 2, title: "Система Карпова", subtitle: "Надежный вариант с 4...Nd7", moves: [{ w: 'e4', b: 'c6' }, { w: 'd4', b: 'd5' }, { w: 'Nc3', b: 'dxe4' }, { w: 'Nxe4', b: 'Nd7' }, { w: 'Nf3', b: 'Ngf6' }] },
-      { id: 3, title: "Закрытая система (Advance)", subtitle: "Ответ на 3.e5 с развитием слона", moves: [{ w: 'e4', b: 'c6' }, { w: 'd4', b: 'd5' }, { w: 'e5', b: 'Bf5' }, { w: 'Nf3', b: 'e6' }, { w: 'Be2', b: 'Ne7' }] },
-      { id: 4, title: "Закрытая система: Подрыв", subtitle: "Контрудар 3...c5 против центра", moves: [{ w: 'e4', b: 'c6' }, { w: 'd4', b: 'd5' }, { w: 'e5', b: 'c5' }, { w: 'dxc5', b: 'Nc6' }, { w: 'Nf3', b: 'Bg4' }] },
-      { id: 5, title: "Разменная система", subtitle: "Спокойная игра и контроль линий", moves: [{ w: 'e4', b: 'c6' }, { w: 'd4', b: 'd5' }, { w: 'exd5', b: 'cxd5' }, { w: 'Bd3', b: 'Nc6' }, { w: 'c3', b: 'Nf6' }] },
-      { id: 6, title: "Атака Панова", subtitle: "Борьба против изолятора", moves: [{ w: 'e4', b: 'c6' }, { w: 'd4', b: 'd5' }, { w: 'exd5', b: 'cxd5' }, { w: 'c4', b: 'Nf6' }, { w: 'Nc3', b: 'e6' }] },
-      { id: 7, title: "Фантазийный вариант", subtitle: "Ответ на агрессивное 3.f3", moves: [{ w: 'e4', b: 'c6' }, { w: 'd4', b: 'd5' }, { w: 'f3', b: 'dxe4' }, { w: 'fxe4', b: 'e5' }, { w: 'Nf3', b: 'Be6' }] },
-      { id: 8, title: "Система двух коней", subtitle: "Развитие против ранних коней", moves: [{ w: 'e4', b: 'c6' }, { w: 'Nf3', b: 'd5' }, { w: 'Nc3', b: 'Bg4' }, { w: 'h3', b: 'Bxf3' }, { w: 'Qxf3', b: 'e6' }] },
-      { id: 9, title: "Вариант Тартаковера", subtitle: "Острая игра со сдвоенными пешками", moves: [{ w: 'e4', b: 'c6' }, { w: 'd4', b: 'd5' }, { w: 'Nc3', b: 'dxe4' }, { w: 'Nxe4', b: 'Nf6' }, { w: 'Nxf6+', b: 'exf6' }] },
-      { id: 10, title: "Вариант Бронштейна", subtitle: "Взятие пешкой 'g'", moves: [{ w: 'e4', b: 'c6' }, { w: 'd4', b: 'd5' }, { w: 'Nc3', b: 'dxe4' }, { w: 'Nxe4', b: 'Nf6' }, { w: 'Nxf6+', b: 'gxf6' }] },
-      { id: 11, title: "Система Гургенидзе", subtitle: "Нестандартное фианкетто", moves: [{ w: 'e4', b: 'c6' }, { w: 'd4', b: 'd5' }, { w: 'Nc3', b: 'g6' }, { w: 'h3', b: 'Bg7' }, { w: 'Nf3', b: 'Nf6' }] },
-      { id: 12, title: "Псевдо-Панов", subtitle: "Реакция на раннее 2.c4", moves: [{ w: 'e4', b: 'c6' }, { w: 'c4', b: 'd5' }, { w: 'exd5', b: 'cxd5' }, { w: 'cxd5', b: 'Nf6' }, { w: 'Nc3', b: 'Nxd5' }] }
+      { id: 1, title: "Классическая система", subtitle: "Главная линия с 4...Bf5", moves: [{ w: 'e4', b: 'c6' }, { w: 'd4', b: 'd5' }, { w: 'Nc3', b: 'dxe4' }, { w: 'Nxe4', b: 'Bf5' }, { w: 'Ng3', b: 'Bg6' }, { w: 'h4', b: 'h6' }, { w: 'Nf3', b: 'Nd7' }] },
+      { id: 2, title: "Система Карпова", subtitle: "Надежный вариант с 4...Nd7", moves: [{ w: 'e4', b: 'c6' }, { w: 'd4', b: 'd5' }, { w: 'Nc3', b: 'dxe4' }, { w: 'Nxe4', b: 'Nd7' }, { w: 'Nf3', b: 'Ngf6' }, { w: 'Nxf6+', b: 'Nxf6' }, { w: 'Bc4', b: 'Bf5' }] },
+      { id: 3, title: "Закрытая система (Advance)", subtitle: "Ответ на 3.e5 с развитием слона", moves: [{ w: 'e4', b: 'c6' }, { w: 'd4', b: 'd5' }, { w: 'e5', b: 'Bf5' }, { w: 'Nf3', b: 'e6' }, { w: 'Be2', b: 'Ne7' }, { w: 'O-O', b: 'Nd7' }, { w: 'c3', b: 'h6' }] },
+      { id: 4, title: "Закрытая система: Подрыв", subtitle: "Контрудар 3...c5 против центра", moves: [{ w: 'e4', b: 'c6' }, { w: 'd4', b: 'd5' }, { w: 'e5', b: 'c5' }, { w: 'dxc5', b: 'Nc6' }, { w: 'Nf3', b: 'Bg4' }, { w: 'c3', b: 'e6' }, { w: 'Be3', b: 'Nge7' }] },
+      { id: 5, title: "Разменная система", subtitle: "Спокойная игра и контроль линий", moves: [{ w: 'e4', b: 'c6' }, { w: 'd4', b: 'd5' }, { w: 'exd5', b: 'cxd5' }, { w: 'Bd3', b: 'Nc6' }, { w: 'c3', b: 'Nf6' }, { w: 'Bf4', b: 'Bg4' }, { w: 'Qb3', b: 'Qd7' }] },
+      { id: 6, title: "Атака Панова", subtitle: "Борьба против изолятора", moves: [{ w: 'e4', b: 'c6' }, { w: 'd4', b: 'd5' }, { w: 'exd5', b: 'cxd5' }, { w: 'c4', b: 'Nf6' }, { w: 'Nc3', b: 'e6' }, { w: 'Nf3', b: 'Be7' }, { w: 'cxd5', b: 'Nxd5' }] },
+      { id: 7, title: "Фантазийный вариант", subtitle: "Ответ на агрессивное 3.f3", moves: [{ w: 'e4', b: 'c6' }, { w: 'd4', b: 'd5' }, { w: 'f3', b: 'dxe4' }, { w: 'fxe4', b: 'e5' }, { w: 'Nf3', b: 'Be6' }, { w: 'c3', b: 'Nd7' }, { w: 'Bd3', b: 'Ngf6' }] },
+      { id: 8, title: "Система двух коней", subtitle: "Развитие против ранних коней", moves: [{ w: 'e4', b: 'c6' }, { w: 'Nf3', b: 'd5' }, { w: 'Nc3', b: 'Bg4' }, { w: 'h3', b: 'Bxf3' }, { w: 'Qxf3', b: 'e6' }, { w: 'd3', b: 'Nf6' }, { w: 'a3', b: 'Be7' }] },
+      { id: 9, title: "Вариант Тартаковера", subtitle: "Острая игра со сдвоенными пешками", moves: [{ w: 'e4', b: 'c6' }, { w: 'd4', b: 'd5' }, { w: 'Nc3', b: 'dxe4' }, { w: 'Nxe4', b: 'Nf6' }, { w: 'Nxf6+', b: 'exf6' }, { w: 'c3', b: 'Bd6' }, { w: 'Bd3', b: 'O-O' }] },
+      { id: 10, title: "Вариант Бронштейна", subtitle: "Взятие пешкой 'g'", moves: [{ w: 'e4', b: 'c6' }, { w: 'd4', b: 'd5' }, { w: 'Nc3', b: 'dxe4' }, { w: 'Nxe4', b: 'Nf6' }, { w: 'Nxf6+', b: 'gxf6' }, { w: 'c3', b: 'Bf5' }, { w: 'Nf3', b: 'e6' }] },
+      { id: 11, title: "Система Гургенидзе", subtitle: "Нестандартное фианкетто", moves: [{ w: 'e4', b: 'c6' }, { w: 'd4', b: 'd5' }, { w: 'Nc3', b: 'g6' }, { w: 'h3', b: 'Bg7' }, { w: 'Nf3', b: 'Nf6' }, { w: 'e5', b: 'Ne4' }, { w: 'Nxe4', b: 'dxe4' }] },
+      { id: 12, title: "Псевдо-Панов", subtitle: "Реакция на раннее 2.c4", moves: [{ w: 'e4', b: 'c6' }, { w: 'c4', b: 'd5' }, { w: 'exd5', b: 'cxd5' }, { w: 'cxd5', b: 'Nf6' }, { w: 'Nc3', b: 'Nxd5' }, { w: 'Nf3', b: 'Nc6' }, { w: 'Bb5', b: 'e6' }] }
     ];
 
-    // --- СОСТОЯНИЕ ---
     let userColor = 'w';
     let currentLessonsList = WHITE_LESSONS;
     let userStats = JSON.parse(localStorage.getItem('chess_stats') || '{"w":{}, "b":{}}');
@@ -263,15 +244,13 @@
     let board = null;
     let selectedSquare = null;
     let isPracticeMode = false;
-    let isAiThinking = false; // <-- ГЛАВНЫЙ ФЛАГ БЕЗОПАСНОСТИ
+    let isAiThinking = false;
 
     function saveStats() { localStorage.setItem('chess_stats', JSON.stringify(userStats)); renderDashboard(); }
     function getLessonStat(id) { if (!userStats[userColor][id]) userStats[userColor][id] = { completed: false, mistakes: 0, bestMoveIndex: 0 }; return userStats[userColor][id]; }
 
     function selectColor(color) {
-      userColor = color;
-      currentLessonsList = color === 'w' ? WHITE_LESSONS : BLACK_LESSONS;
-      
+      userColor = color; currentLessonsList = color === 'w' ? WHITE_LESSONS : BLACK_LESSONS;
       const badge = document.getElementById('courseBadge');
       if (color === 'w') {
         document.getElementById('courseTitle').innerText = "Лондонская система";
@@ -282,17 +261,10 @@
         document.getElementById('courseDesc').innerText = "Освой непробиваемую оборону за черных за 12 уроков";
         badge.className = "hero-badge b-badge";
       }
-
-      document.getElementById('startScreen').classList.remove('active');
-      document.getElementById('homeScreen').classList.add('active');
-      renderDashboard();
+      document.getElementById('startScreen').classList.remove('active'); document.getElementById('homeScreen').classList.add('active'); renderDashboard();
     }
 
-    function goBackToStart() {
-      document.getElementById('homeScreen').classList.remove('active');
-      document.getElementById('startScreen').classList.add('active');
-    }
-
+    function goBackToStart() { document.getElementById('homeScreen').classList.remove('active'); document.getElementById('startScreen').classList.add('active'); }
     function toRussianNotation(san) {
       if (!san) return ''; let piece = 'Пешка'; let rest = san;
       if (san.startsWith('N')) { piece = 'Конь'; rest = san.substring(1); } else if (san.startsWith('B')) { piece = 'Слон'; rest = san.substring(1); }
@@ -327,59 +299,37 @@
       document.getElementById('homeScreen').classList.remove('active'); 
       const gs = document.getElementById('gameScreen'); gs.classList.add('active'); gs.classList.remove('practice-mode');
       document.getElementById('gameLessonTitle').innerText = `Урок ${currentLesson.id} из 12`;
-      
       initChessboard();
       
       if (userColor === 'b') {
         setDebrief('Робот делает первый ход...', false);
-        setTimeout(() => {
-          game.move(currentLesson.moves[0].w);
-          board.position(game.fen());
-          updateEvalBar();
-          highlightLastMoveFromSan(currentLesson.moves[0].w);
-          setDebrief('Твой ход за черных согласно теории.', false);
-        }, 500);
-      } else {
-        setDebrief('Ход белых. Сделай теоретический ход.', false);
-        updateEvalBar(); 
-      }
+        setTimeout(() => { game.move(currentLesson.moves[0].w); board.position(game.fen()); updateEvalBar(); highlightLastMoveFromSan(currentLesson.moves[0].w); setDebrief('Твой ход за черных согласно теории.', false); }, 500);
+      } else { setDebrief('Ход белых. Сделай теоретический ход.', false); updateEvalBar(); }
     }
 
     function setDebrief(text, isError = false, hint = '', isPractice = false) {
-      const card = document.getElementById('debriefCard');
-      const textEl = document.getElementById('debriefText');
+      const card = document.getElementById('debriefCard'); const textEl = document.getElementById('debriefText');
       textEl.innerText = text; document.getElementById('debriefHint').innerText = hint;
-      
-      card.classList.remove('error', 'practice'); 
-      textEl.classList.remove('thinking');
-      if (isError) card.classList.add('error'); 
-      if (isPractice) card.classList.add('practice');
-      if (isAiThinking) textEl.classList.add('thinking'); // Анимация пульсации, когда ИИ думает
+      card.classList.remove('error', 'practice'); textEl.classList.remove('thinking');
+      if (isError) card.classList.add('error'); if (isPractice) card.classList.add('practice');
+      if (isAiThinking) textEl.classList.add('thinking');
     }
 
     async function updateEvalBar() {
       try {
         const res = await fetch('https://chess-api.com/v1', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fen: game.fen(), depth: 8 }) });
         const data = await res.json();
-        
-        let evalValue = data.eval ?? 0;
-        let textVal = evalValue > 0 ? `+${evalValue.toFixed(1)}` : evalValue.toFixed(1);
+        let evalValue = data.eval ?? 0; let textVal = evalValue > 0 ? `+${evalValue.toFixed(1)}` : evalValue.toFixed(1);
         if (data.mate) { textVal = `M${Math.abs(data.mate)}`; evalValue = data.mate > 0 ? 10 : -10; }
 
-        let clamped = Math.max(-10, Math.min(10, evalValue));
-        let percent = 50 + (clamped / 10) * 50; 
-        
+        let clamped = Math.max(-10, Math.min(10, evalValue)); let percent = 50 + (clamped / 10) * 50; 
         const fill = document.getElementById('evalFill'); const box = document.getElementById('evalLabelBox'); const text = document.getElementById('evalText'); const bar = document.getElementById('evalBar');
         
-        if(userColor === 'b') {
-            bar.style.transform = 'rotate(180deg)'; box.style.transform = 'translate(-50%, -50%) rotate(-180deg)';
-        } else {
-            bar.style.transform = 'none'; box.style.transform = 'translate(-50%, -50%)';
-        }
+        if(userColor === 'b') { bar.style.transform = 'rotate(180deg)'; box.style.transform = 'translate(-50%, -50%) rotate(-180deg)'; } 
+        else { bar.style.transform = 'none'; box.style.transform = 'translate(-50%, -50%)'; }
 
         fill.style.height = `${percent}%`; text.innerText = textVal;
         if (percent > 85) box.style.top = '15%'; else if (percent < 15) box.style.top = '85%'; else box.style.top = `${100 - percent}%`;
-
       } catch (e) { console.log("Оценка не загрузилась"); }
     }
 
@@ -391,20 +341,13 @@
 
     function setupTapHandlers() { $('#board').off('click').on('click', '.square-55d63', function () { handleSquareTap($(this).attr('data-square')); }); }
     function removeHighlights() { $('#board .square-55d63').removeClass('highlight-selected highlight-dest highlight-last-move'); }
-
-    // Визуальная подсказка последнего хода ИИ
     function highlightLastMoveFromSan(san) {
-      removeHighlights();
-      const history = game.history({ verbose: true });
-      if (history.length > 0) {
-        const lastMove = history[history.length - 1];
-        $(`#board .square-${lastMove.to}`).addClass('highlight-last-move');
-      }
+      removeHighlights(); const history = game.history({ verbose: true });
+      if (history.length > 0) $(`#board .square-${history[history.length - 1].to}`).addClass('highlight-last-move');
     }
 
     function handleSquareTap(square) {
-      if (isAiThinking) return; // БЛОКИРОВКА ПРИ ДУМАЮЩЕМ ИИ
-
+      if (isAiThinking) return;
       const piece = game.get(square);
       if (piece && piece.color === userColor) { 
         selectedSquare = square; removeHighlights(); $(`#board .square-${square}`).addClass('highlight-selected');
@@ -421,36 +364,23 @@
 
     async function fetchAiMove() {
       if (checkGameStatus()) { isAiThinking = false; return; }
-      
       try {
         const res = await fetch('https://chess-api.com/v1', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fen: game.fen(), depth: 10 }) });
         const data = await res.json();
         if (data.from && data.to) { game.move({ from: data.from, to: data.to, promotion: data.promotion || 'q' }); } else if (data.move) { game.move(data.move); }
       } catch (err) {
-        // Fallback на случай обрыва сети
-        const moves = game.moves();
-        if (moves.length > 0) game.move(moves[Math.floor(Math.random() * moves.length)]);
+        const moves = game.moves(); if (moves.length > 0) game.move(moves[Math.floor(Math.random() * moves.length)]);
       } finally {
-        board.position(game.fen()); 
-        updateEvalBar();
-        highlightLastMoveFromSan();
-        isAiThinking = false;
-        document.getElementById('undoActionBtn').disabled = false; // Разблокируем кнопку отмены
+        board.position(game.fen()); updateEvalBar(); highlightLastMoveFromSan(); isAiThinking = false;
+        document.getElementById('undoActionBtn').disabled = false;
         if (!checkGameStatus()) setDebrief('Твой ход! Ищи лучшее продолжение.', false, '', true);
       }
     }
 
-    /* БЕЗОПАСНАЯ КНОПКА ОТМЕНЫ ХОДА */
     document.getElementById('undoActionBtn').addEventListener('click', () => {
       if (!isPracticeMode || isAiThinking) return;
-      
-      // Проверяем, есть ли что отменять (минимум 2 хода, чтобы отменить ответ ИИ и свой ход)
       if (game.history().length >= 2) {
-        game.undo(); // Откат ИИ
-        game.undo(); // Откат игрока
-        board.position(game.fen());
-        updateEvalBar();
-        removeHighlights();
+        game.undo(); game.undo(); board.position(game.fen()); updateEvalBar(); removeHighlights();
         setDebrief('Ход отменен. Попробуй найти вариант сильнее!', false, '', true);
       }
     });
@@ -460,37 +390,21 @@
       removeHighlights();
 
       if (isPracticeMode) {
-        board.position(game.fen()); updateEvalBar();
-        isAiThinking = true; // МГНОВЕННАЯ БЛОКИРОВКА
-        document.getElementById('undoActionBtn').disabled = true;
-        setDebrief('ИИ анализирует позицию...', false, '', true); 
-        setTimeout(fetchAiMove, 50); 
-        return;
+        board.position(game.fen()); updateEvalBar(); isAiThinking = true; document.getElementById('undoActionBtn').disabled = true;
+        setDebrief('ИИ анализирует позицию...', false, '', true); setTimeout(fetchAiMove, 50); return;
       }
 
-      // ЛОГИКА ТЕОРИИ
       const expectedMoveSan = userColor === 'w' ? currentLesson.moves[stepIndex].w : currentLesson.moves[stepIndex].b;
-      
       if (move.san === expectedMoveSan) {
         board.position(game.fen()); setDebrief('Верно! Робот отвечает...', false); updateEvalBar();
-
         const stat = getLessonStat(currentLesson.id); if (stepIndex + 1 > stat.bestMoveIndex) { stat.bestMoveIndex = stepIndex + 1; saveStats(); }
         
         setTimeout(() => {
           let aiMoveSan = '';
-          if (userColor === 'w') {
-              aiMoveSan = currentLesson.moves[stepIndex].b;
-              game.move(aiMoveSan); 
-          } else {
-              stepIndex++;
-              if (stepIndex < currentLesson.moves.length) {
-                aiMoveSan = currentLesson.moves[stepIndex].w;
-                game.move(aiMoveSan);
-              }
-          }
+          if (userColor === 'w') { aiMoveSan = currentLesson.moves[stepIndex].b; game.move(aiMoveSan); } 
+          else { stepIndex++; if (stepIndex < currentLesson.moves.length) { aiMoveSan = currentLesson.moves[stepIndex].w; game.move(aiMoveSan); } }
           
-          board.position(game.fen()); updateEvalBar();
-          if (aiMoveSan) highlightLastMoveFromSan(aiMoveSan);
+          board.position(game.fen()); updateEvalBar(); if (aiMoveSan) highlightLastMoveFromSan(aiMoveSan);
           
           if ((userColor === 'w' && stepIndex + 1 >= currentLesson.moves.length) || (userColor === 'b' && stepIndex >= currentLesson.moves.length)) {
             stat.completed = true; saveStats();
@@ -507,23 +421,16 @@
         
         setTimeout(() => { 
           game.reset(); stepIndex = 0; 
-          if (userColor === 'b') {
-             game.move(currentLesson.moves[0].w); board.position(game.fen()); highlightLastMoveFromSan();
-             setDebrief('Твой ход за черных согласно теории.', false);
-          } else {
-             board.start(false); setDebrief('Ход белых. Сделай теоретический ход.', false);
-          }
+          if (userColor === 'b') { game.move(currentLesson.moves[0].w); board.position(game.fen()); highlightLastMoveFromSan(); setDebrief('Твой ход за черных согласно теории.', false); } 
+          else { board.start(false); setDebrief('Ход белых. Сделай теоретический ход.', false); }
           updateEvalBar(); removeHighlights();
         }, 1500);
       }
     }
 
     document.getElementById('modalPracticeBtn').addEventListener('click', () => { 
-      document.getElementById('modalVictory').classList.remove('active'); 
-      document.getElementById('gameScreen').classList.add('practice-mode');
-      isPracticeMode = true; 
-      setDebrief('Практика против ИИ. Реализуй перевес!', false, '', true); 
-      removeHighlights(); 
+      document.getElementById('modalVictory').classList.remove('active'); document.getElementById('gameScreen').classList.add('practice-mode');
+      isPracticeMode = true; setDebrief('Практика против ИИ. Реализуй перевес!', false, '', true); removeHighlights(); 
       if(userColor==='b') { isAiThinking = true; setDebrief('ИИ анализирует позицию...', false, '', true); fetchAiMove(); } 
     });
     
