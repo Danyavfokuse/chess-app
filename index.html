@@ -202,7 +202,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"></script>
 
   <script>
-    // --- ОБНОВЛЕННЫЕ ДАННЫЕ УРОКОВ (Добавлено по 2 полных хода) ---
+    // --- ДАННЫЕ УРОКОВ ---
     const WHITE_LESSONS = [
       { id: 1, title: "Классический ответ 1...d5", subtitle: "Симметричная структура и ранний Слон", moves: [{ w: 'd4', b: 'd5' }, { w: 'Bf4', b: 'Nf6' }, { w: 'e3', b: 'e6' }, { w: 'Nf3', b: 'Bd6' }, { w: 'Bg3', b: 'O-O' }, { w: 'Bd3', b: 'c5' }, { w: 'c3', b: 'Nc6' }] },
       { id: 2, title: "Староиндийский стиль 1...Nf6", subtitle: "Ответ на фианкетто", moves: [{ w: 'd4', b: 'Nf6' }, { w: 'Bf4', b: 'g6' }, { w: 'e3', b: 'Bg7' }, { w: 'Nf3', b: 'd6' }, { w: 'h3', b: 'O-O' }, { w: 'Be2', b: 'c5' }, { w: 'O-O', b: 'Nc6' }] },
@@ -253,25 +253,32 @@
       userColor = color; currentLessonsList = color === 'w' ? WHITE_LESSONS : BLACK_LESSONS;
       const badge = document.getElementById('courseBadge');
       if (color === 'w') {
-        document.getElementById('courseTitle').innerText = "Лондонская система";
-        document.getElementById('courseDesc').innerText = "Освой фундаментальный дебют за белых за 12 уроков";
-        badge.className = "hero-badge w-badge";
+        document.getElementById('courseTitle').innerText = "Лондонская система"; document.getElementById('courseDesc').innerText = "Освой фундаментальный дебют за белых за 12 уроков"; badge.className = "hero-badge w-badge";
       } else {
-        document.getElementById('courseTitle').innerText = "Защита Каро-Канн";
-        document.getElementById('courseDesc').innerText = "Освой непробиваемую оборону за черных за 12 уроков";
-        badge.className = "hero-badge b-badge";
+        document.getElementById('courseTitle').innerText = "Защита Каро-Канн"; document.getElementById('courseDesc').innerText = "Освой непробиваемую оборону за черных за 12 уроков"; badge.className = "hero-badge b-badge";
       }
       document.getElementById('startScreen').classList.remove('active'); document.getElementById('homeScreen').classList.add('active'); renderDashboard();
     }
 
     function goBackToStart() { document.getElementById('homeScreen').classList.remove('active'); document.getElementById('startScreen').classList.add('active'); }
+    
+    // Обновленный метод подсказок с английскими буквами полей
     function toRussianNotation(san) {
-      if (!san) return ''; let piece = 'Пешка'; let rest = san;
-      if (san.startsWith('N')) { piece = 'Конь'; rest = san.substring(1); } else if (san.startsWith('B')) { piece = 'Слон'; rest = san.substring(1); }
-      else if (san.startsWith('R')) { piece = 'Ладья'; rest = san.substring(1); } else if (san.startsWith('Q')) { piece = 'Ферзь'; rest = san.substring(1); }
-      else if (san.startsWith('K')) { piece = 'Король'; rest = san.substring(1); } else if (san === 'O-O') return 'Короткая рокировка'; else if (san === 'O-O-O') return 'Длинная рокировка';
-      rest = rest.replace('x', ' берет ').replace('+', ' с шахом').replace('#', ' мат').replace(/a/g, 'А').replace(/b/g, 'Б').replace(/c/g, 'Ц').replace(/d/g, 'Д').replace(/e/g, 'Е').replace(/f/g, 'Ф').replace(/g/g, 'Ж').replace(/h/g, 'Х');
-      return `${piece} на ${rest.trim()}`;
+      if (!san) return ''; 
+      if (san === 'O-O') return 'Короткая рокировка'; 
+      if (san === 'O-O-O') return 'Длинная рокировка';
+
+      let piece = 'Пешка'; 
+      let rest = san;
+      
+      if (san.startsWith('N')) { piece = 'Конь'; rest = san.substring(1); } 
+      else if (san.startsWith('B')) { piece = 'Слон'; rest = san.substring(1); }
+      else if (san.startsWith('R')) { piece = 'Ладья'; rest = san.substring(1); } 
+      else if (san.startsWith('Q')) { piece = 'Ферзь'; rest = san.substring(1); }
+      else if (san.startsWith('K')) { piece = 'Король'; rest = san.substring(1); }
+      
+      rest = rest.replace('x', ' берет ').replace('+', ' (шах)').replace('#', ' (мат)');
+      return `${piece} ${rest.trim()}`;
     }
 
     function renderDashboard() {
@@ -333,9 +340,34 @@
       } catch (e) { console.log("Оценка не загрузилась"); }
     }
 
+    // Идеальные векторные фигуры с Википедии (никогда не пропадают)
+    function getWikimediaPiece(piece) {
+      const map = {
+        'wK': 'https://upload.wikimedia.org/wikipedia/commons/4/42/Chess_klt45.svg',
+        'wQ': 'https://upload.wikimedia.org/wikipedia/commons/1/15/Chess_qlt45.svg',
+        'wR': 'https://upload.wikimedia.org/wikipedia/commons/7/72/Chess_rlt45.svg',
+        'wB': 'https://upload.wikimedia.org/wikipedia/commons/b/b1/Chess_blt45.svg',
+        'wN': 'https://upload.wikimedia.org/wikipedia/commons/7/70/Chess_nlt45.svg',
+        'wP': 'https://upload.wikimedia.org/wikipedia/commons/4/45/Chess_plt45.svg',
+        'bK': 'https://upload.wikimedia.org/wikipedia/commons/f/f0/Chess_kdt45.svg',
+        'bQ': 'https://upload.wikimedia.org/wikipedia/commons/4/47/Chess_qdt45.svg',
+        'bR': 'https://upload.wikimedia.org/wikipedia/commons/f/ff/Chess_rdt45.svg',
+        'bB': 'https://upload.wikimedia.org/wikipedia/commons/9/98/Chess_bdt45.svg',
+        'bN': 'https://upload.wikimedia.org/wikipedia/commons/e/ed/Chess_ndt45.svg',
+        'bP': 'https://upload.wikimedia.org/wikipedia/commons/c/c7/Chess_pdt45.svg'
+      };
+      return map[piece];
+    }
+
     function initChessboard() {
       game = new Chess();
-      const config = { position: 'start', draggable: false, orientation: userColor === 'w' ? 'white' : 'black', pieceTheme: 'https://cdn.jsdelivr.net/gh/lichess-org/lila@master/public/piece/cburnett/{piece}.svg', moveSpeed: 150 };
+      const config = { 
+        position: 'start', 
+        draggable: false, 
+        orientation: userColor === 'w' ? 'white' : 'black', 
+        pieceTheme: getWikimediaPiece, 
+        moveSpeed: 150 
+      };
       board = Chessboard('board', config); $(window).resize(board.resize); setupTapHandlers();
     }
 
