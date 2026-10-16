@@ -28,6 +28,9 @@
     .screen.active { display: flex; flex-direction: column; animation: fadeIn 0.3s ease-out; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
+    /* Прелоадер для фигур */
+    #preloadArea { display: none; }
+
     /* SCREEN 0: Выбор цвета */
     .side-selector { display: flex; flex-direction: column; gap: 16px; margin-top: 20px; }
     .side-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 20px; padding: 24px; text-align: center; cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden; }
@@ -121,6 +124,9 @@
   </style>
 </head>
 <body>
+
+  <!-- Невидимый контейнер для предзагрузки фигур -->
+  <div id="preloadArea"></div>
 
   <div id="startScreen" class="screen active">
     <div class="hero">
@@ -246,6 +252,23 @@
     let isPracticeMode = false;
     let isAiThinking = false;
 
+    // ПРЕДЗАГРУЗКА ФИГУР: Вызывается при старте страницы, чтобы браузер положил их в кэш.
+    function preloadChessPieces() {
+      const pieces = ['wK','wQ','wR','wB','wN','wP','bK','bQ','bR','bB','bN','bP'];
+      const preloadArea = document.getElementById('preloadArea');
+      pieces.forEach(p => {
+        const img = new Image();
+        img.src = `https://cdn.jsdelivr.net/gh/lichess-org/lila@master/public/piece/cburnett/${p}.svg`;
+        preloadArea.appendChild(img);
+      });
+    }
+    preloadChessPieces();
+
+    function getPieceUrl(piece) {
+      // Идеально четкие векторные SVG фигуры, загружаемые из надежного CDN Lichess
+      return `https://cdn.jsdelivr.net/gh/lichess-org/lila@master/public/piece/cburnett/${piece}.svg`;
+    }
+
     function saveStats() { localStorage.setItem('chess_stats', JSON.stringify(userStats)); renderDashboard(); }
     function getLessonStat(id) { if (!userStats[userColor][id]) userStats[userColor][id] = { completed: false, mistakes: 0, bestMoveIndex: 0 }; return userStats[userColor][id]; }
 
@@ -262,7 +285,7 @@
 
     function goBackToStart() { document.getElementById('homeScreen').classList.remove('active'); document.getElementById('startScreen').classList.add('active'); }
     
-    // Обновленный метод подсказок с английскими буквами полей
+    // Обновленные подсказки с английскими буквами (Слон f4, Пешка c5)
     function toRussianNotation(san) {
       if (!san) return ''; 
       if (san === 'O-O') return 'Короткая рокировка'; 
@@ -340,32 +363,13 @@
       } catch (e) { console.log("Оценка не загрузилась"); }
     }
 
-    // Идеальные векторные фигуры с Википедии (никогда не пропадают)
-    function getWikimediaPiece(piece) {
-      const map = {
-        'wK': 'https://upload.wikimedia.org/wikipedia/commons/4/42/Chess_klt45.svg',
-        'wQ': 'https://upload.wikimedia.org/wikipedia/commons/1/15/Chess_qlt45.svg',
-        'wR': 'https://upload.wikimedia.org/wikipedia/commons/7/72/Chess_rlt45.svg',
-        'wB': 'https://upload.wikimedia.org/wikipedia/commons/b/b1/Chess_blt45.svg',
-        'wN': 'https://upload.wikimedia.org/wikipedia/commons/7/70/Chess_nlt45.svg',
-        'wP': 'https://upload.wikimedia.org/wikipedia/commons/4/45/Chess_plt45.svg',
-        'bK': 'https://upload.wikimedia.org/wikipedia/commons/f/f0/Chess_kdt45.svg',
-        'bQ': 'https://upload.wikimedia.org/wikipedia/commons/4/47/Chess_qdt45.svg',
-        'bR': 'https://upload.wikimedia.org/wikipedia/commons/f/ff/Chess_rdt45.svg',
-        'bB': 'https://upload.wikimedia.org/wikipedia/commons/9/98/Chess_bdt45.svg',
-        'bN': 'https://upload.wikimedia.org/wikipedia/commons/e/ed/Chess_ndt45.svg',
-        'bP': 'https://upload.wikimedia.org/wikipedia/commons/c/c7/Chess_pdt45.svg'
-      };
-      return map[piece];
-    }
-
     function initChessboard() {
       game = new Chess();
       const config = { 
         position: 'start', 
         draggable: false, 
         orientation: userColor === 'w' ? 'white' : 'black', 
-        pieceTheme: getWikimediaPiece, 
+        pieceTheme: getPieceUrl, 
         moveSpeed: 150 
       };
       board = Chessboard('board', config); $(window).resize(board.resize); setupTapHandlers();
